@@ -132,6 +132,15 @@ export const Users: CollectionConfig = {
         }
       ]
     },
+    {
+      name: 'siteRoles',
+      type: 'relationship',
+      relationTo: 'site-user-assignments',
+      hasMany: true,
+      admin: {
+        description: 'Associações deste usuário com sites específicos'
+      }
+    },
     // Email added by default by the auth system
   ],
   access: {

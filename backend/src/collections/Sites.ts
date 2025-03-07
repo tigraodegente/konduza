@@ -108,6 +108,15 @@ export const Sites: CollectionConfig = {
       }
     },
     {
+      name: 'siteRoles',
+      type: 'relationship',
+      relationTo: 'site-user-roles',
+      hasMany: true,
+      admin: {
+        description: 'Papéis de usuário disponíveis neste site'
+      }
+    },
+    {
       name: 'status',
       type: 'select',
       required: true,

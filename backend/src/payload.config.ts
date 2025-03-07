@@ -12,6 +12,8 @@ import { Media } from './collections/Media'
 import { Sites } from './collections/Sites'
 import { Themes } from './collections/Themes'
 import { Entities } from './collections/Entities'
+import { SiteUserRoles } from './collections/SiteUserRoles'
+import { SiteUserAssignments } from './collections/SiteUserAssignments'
 
 // Plugin para sincronização de temas
 import payloadImportPlugin from '../plugins/payload-import-plugin'
@@ -23,6 +25,9 @@ import { logRequests } from './middleware/logRequests'
 import themeValidationEndpoint from './endpoints/theme-validation'
 import importDataEndpoint from './endpoints/import-data'
 import adminCheckEndpoint from './endpoints/admin-check'
+import checkSitePermission from './endpoints/check-site-permission'
+import getUserSiteRole from './endpoints/user-site-role'
+import getUserSites from './endpoints/user-sites'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -48,7 +53,9 @@ export default buildConfig({
     Media, 
     Sites, 
     Themes, 
-    Entities
+    Entities,
+    SiteUserRoles,
+    SiteUserAssignments
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
@@ -89,7 +96,22 @@ export default buildConfig({
   endpoints: [
     themeValidationEndpoint,
     importDataEndpoint,
-    adminCheckEndpoint
+    adminCheckEndpoint,
+    {
+      path: '/api/check-site-permission',
+      method: 'post',
+      handler: checkSitePermission
+    },
+    {
+      path: '/api/user-site-role',
+      method: 'get',
+      handler: getUserSiteRole
+    },
+    {
+      path: '/api/user-sites',
+      method: 'get',
+      handler: getUserSites
+    }
   ],
   onInit: async (payload) => {
     console.log('[Payload] Konduza Payload CMS inicializado com sucesso!')
