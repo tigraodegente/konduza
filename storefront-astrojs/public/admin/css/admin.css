@@ -358,13 +358,8 @@ button, input, select, textarea {
 }
 
 /* Conteúdo Principal */
-.admin-content-wrapper {
-  grid-area: content;
-  display: flex;
-}
-
 .admin-content {
-  flex: 1;
+  grid-area: content;
   padding: var(--spacing-md);
   overflow-y: auto;
 }

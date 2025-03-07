@@ -130,99 +130,97 @@ const { title, currentSection = 'dashboard', userData = { name: 'Administrador',
       </div>
     </header>
     
-    <div class="admin-content-wrapper">
-      <aside class="admin-sidebar">
-        {currentSection === 'dashboard' && (
-          <div class="sidebar-section">
-            <h3>Dashboard</h3>
-            <ul>
-              <li><a href="/admin" class="active">Visão Geral</a></li>
-              <li><a href="/admin/activity">Atividade Recente</a></li>
-              <li><a href="/admin/analytics">Analytics</a></li>
-            </ul>
-          </div>
-        )}
-        
-        {currentSection === 'sites' && (
-          <div class="sidebar-section">
-            <h3>Sites</h3>
-            <ul>
-              <li><a href="/admin/sites">Todos os Sites</a></li>
-              <li><a href="/admin/sites/criar">Criar Novo Site</a></li>
-              <li><a href="/admin/sites/dominios">Gerenciar Domínios</a></li>
-            </ul>
-          </div>
-        )}
-        
-        {currentSection === 'themes' && (
-          <div class="sidebar-section">
-            <h3>Temas</h3>
-            <ul>
-              <li><a href="/admin/themes">Biblioteca de Temas</a></li>
-              <li><a href="/admin/themes/editor">Editor de Tema</a></li>
-              <li><a href="/admin/themes/componentes">Componentes</a></li>
-              <li><a href="/admin/themes/cores">Cores e Estilos</a></li>
-            </ul>
-          </div>
-        )}
-        
-        {currentSection === 'media' && (
-          <div class="sidebar-section">
-            <h3>Mídia</h3>
-            <ul>
-              <li><a href="/admin/media">Biblioteca de Mídia</a></li>
-              <li><a href="/admin/media/upload">Upload de Arquivos</a></li>
-              <li><a href="/admin/media/pastas">Gerenciar Pastas</a></li>
-            </ul>
-          </div>
-        )}
-        
-        {currentSection === 'entities' && (
-          <div class="sidebar-section">
-            <h3>Entidades</h3>
-            <ul>
-              <li><a href="/admin/entities">Todas as Entidades</a></li>
-              <li><a href="/admin/entities/esquemas">Esquemas</a></li>
-              <li><a href="/admin/entities/dados">Visualizar Dados</a></li>
-            </ul>
-          </div>
-        )}
-        
-        {currentSection === 'users' && (
-          <div class="sidebar-section">
-            <h3>Usuários</h3>
-            <ul>
-              <li><a href="/admin/users">Todos os Usuários</a></li>
-              <li><a href="/admin/users/criar">Adicionar Usuário</a></li>
-              <li><a href="/admin/users/permissoes">Permissões</a></li>
-            </ul>
-          </div>
-        )}
-        
-        {currentSection === 'settings' && (
-          <div class="sidebar-section">
-            <h3>Configurações</h3>
-            <ul>
-              <li><a href="/admin/settings">Configurações Gerais</a></li>
-              <li><a href="/admin/settings/integracao">Integrações</a></li>
-              <li><a href="/admin/settings/seguranca">Segurança</a></li>
-            </ul>
-          </div>
-        )}
-        
-        <div class="sidebar-toggle">
-          <button id="sidebar-toggle-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sidebar-icon">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
+    <aside class="admin-sidebar">
+      {currentSection === 'dashboard' && (
+        <div class="sidebar-section">
+          <h3>Dashboard</h3>
+          <ul>
+            <li><a href="/admin" class="active">Visão Geral</a></li>
+            <li><a href="/admin/activity">Atividade Recente</a></li>
+            <li><a href="/admin/analytics">Analytics</a></li>
+          </ul>
         </div>
-      </aside>
+      )}
       
-      <main class="admin-content">
-        <slot />
-      </main>
-    </div>
+      {currentSection === 'sites' && (
+        <div class="sidebar-section">
+          <h3>Sites</h3>
+          <ul>
+            <li><a href="/admin/sites">Todos os Sites</a></li>
+            <li><a href="/admin/sites/criar">Criar Novo Site</a></li>
+            <li><a href="/admin/sites/dominios">Gerenciar Domínios</a></li>
+          </ul>
+        </div>
+      )}
+      
+      {currentSection === 'themes' && (
+        <div class="sidebar-section">
+          <h3>Temas</h3>
+          <ul>
+            <li><a href="/admin/themes">Biblioteca de Temas</a></li>
+            <li><a href="/admin/themes/editor">Editor de Tema</a></li>
+            <li><a href="/admin/themes/componentes">Componentes</a></li>
+            <li><a href="/admin/themes/cores">Cores e Estilos</a></li>
+          </ul>
+        </div>
+      )}
+      
+      {currentSection === 'media' && (
+        <div class="sidebar-section">
+          <h3>Mídia</h3>
+          <ul>
+            <li><a href="/admin/media">Biblioteca de Mídia</a></li>
+            <li><a href="/admin/media/upload">Upload de Arquivos</a></li>
+            <li><a href="/admin/media/pastas">Gerenciar Pastas</a></li>
+          </ul>
+        </div>
+      )}
+      
+      {currentSection === 'entities' && (
+        <div class="sidebar-section">
+          <h3>Entidades</h3>
+          <ul>
+            <li><a href="/admin/entities">Todas as Entidades</a></li>
+            <li><a href="/admin/entities/esquemas">Esquemas</a></li>
+            <li><a href="/admin/entities/dados">Visualizar Dados</a></li>
+          </ul>
+        </div>
+      )}
+      
+      {currentSection === 'users' && (
+        <div class="sidebar-section">
+          <h3>Usuários</h3>
+          <ul>
+            <li><a href="/admin/users">Todos os Usuários</a></li>
+            <li><a href="/admin/users/criar">Adicionar Usuário</a></li>
+            <li><a href="/admin/users/permissoes">Permissões</a></li>
+          </ul>
+        </div>
+      )}
+      
+      {currentSection === 'settings' && (
+        <div class="sidebar-section">
+          <h3>Configurações</h3>
+          <ul>
+            <li><a href="/admin/settings">Configurações Gerais</a></li>
+            <li><a href="/admin/settings/integracao">Integrações</a></li>
+            <li><a href="/admin/settings/seguranca">Segurança</a></li>
+          </ul>
+        </div>
+      )}
+      
+      <div class="sidebar-toggle">
+        <button id="sidebar-toggle-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sidebar-icon">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </aside>
+    
+    <main class="admin-content">
+      <slot />
+    </main>
     
     <footer class="admin-footer">
       <div class="footer-copyright">
