@@ -1,0 +1,167 @@
+/* Tema escuro para o painel Konduza */
+:root {
+  /* Cores principais */
+  --primary: #6366f1;      /* Indigo mais brilhante para destaque */
+  --primary-hover: #4f46e5;
+  --secondary: #64748b;
+  --secondary-hover: #475569;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  
+  /* Tons neutros (modo escuro) */
+  --bg-light: #1e1e2e;     /* Fundo escuro */
+  --bg-dark: #11111b;      /* Fundo mais escuro */
+  --text-light: #e2e8f0;   /* Texto claro para fundo escuro */
+  --text-dark: #94a3b8;    /* Texto menos brilhante */
+  --border-light: #2d2d3f; /* Bordas mais sutis */
+  --border-dark: #1c1c2a;  /* Bordas escuras */
+  
+  /* Ajustes para o tema escuro */
+  --header-bg: #11111b;
+  --sidebar-bg: #1e1e2e;
+  --content-bg: #262636;
+  --input-bg: #0f0f17;
+  --panel-bg: #262636;
+  --hover-bg: rgba(99, 102, 241, 0.1);
+  
+  /* Ajustes para filtro de imagens */
+  --image-filter: brightness(0.9) contrast(1.1);
+}
+
+/* Estilo base */
+body {
+  background-color: var(--bg-light);
+  color: var(--text-light);
+}
+
+/* Cabeçalho */
+.admin-header {
+  background-color: var(--header-bg);
+  border-color: var(--border-light);
+}
+
+.admin-main-nav a {
+  color: var(--text-dark);
+}
+
+.admin-main-nav a:hover, .admin-main-nav a.active {
+  color: var(--primary);
+  background-color: var(--hover-bg);
+}
+
+/* Barra lateral */
+.admin-sidebar {
+  background-color: var(--sidebar-bg);
+  border-color: var(--border-light);
+}
+
+.sidebar-section a {
+  color: var(--text-light);
+}
+
+.sidebar-section a:hover, .sidebar-section a.active {
+  color: var(--primary);
+  background-color: var(--hover-bg);
+}
+
+/* Conteúdo */
+.admin-content {
+  background-color: var(--content-bg);
+}
+
+/* Painéis e cartões */
+.card, .content-container, .bg-white {
+  background-color: var(--panel-bg) !important;
+  color: var(--text-light);
+  border-color: var(--border-light);
+}
+
+/* Botões */
+.btn-primary {
+  background-color: var(--primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Inputs */
+input, select, textarea {
+  background-color: var(--input-bg);
+  color: var(--text-light);
+  border-color: var(--border-light);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* Tabelas */
+table {
+  color: var(--text-light);
+}
+
+thead th {
+  border-color: var(--border-light);
+}
+
+tbody td {
+  border-color: var(--border-light);
+}
+
+tr:hover {
+  background-color: var(--hover-bg);
+}
+
+/* Imagens */
+img {
+  filter: var(--image-filter);
+}
+
+/* Footer */
+.admin-footer {
+  background-color: var(--header-bg);
+  border-color: var(--border-light);
+  color: var(--text-dark);
+}
+
+/* Dropdown */
+.dropdown-menu, .profile-dropdown {
+  background-color: var(--panel-bg);
+  border-color: var(--border-light);
+  color: var(--text-light);
+}
+
+/* Ajustes de SVG e ícones */
+svg {
+  stroke: currentColor;
+}
+
+/* Adaptações gerais para modo escuro */
+.text-gray-700 {
+  color: var(--text-light) !important;
+}
+
+.text-gray-600 {
+  color: var(--text-dark) !important;
+}
+
+.border-gray-300, .border-gray-200 {
+  border-color: var(--border-light) !important;
+}
+
+.shadow-md, .shadow-lg {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Classes Tailwind comuns para ajustar */
+.bg-white {
+  background-color: var(--panel-bg) !important;
+}
+
+.text-sm, .text-xs, .text-base {
+  color: inherit;
+}
