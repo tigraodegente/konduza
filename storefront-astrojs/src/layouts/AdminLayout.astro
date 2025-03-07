@@ -17,14 +17,113 @@ interface Props {
 const { title, currentSection = 'dashboard', userData = { name: 'Administrador', email: '', roles: [], avatarUrl: '' } } = Astro.props;
 ---
 
+// src/layouts/AdminLayout.astro
+import UserAvatar from '../components/UserAvatar.astro';
+
+interface Props {
+  title: string;
+  currentSection?: string;
+  userData?: {
+    name: string;
+    email: string;
+    roles: string[];
+    avatarUrl?: string;
+  };
+}
+
+// As páginas filhas devem passar os dados do usuário como propriedade
+const { title, currentSection = 'dashboard', userData = { name: 'Administrador', email: '', roles: [], avatarUrl: '' } } = Astro.props;
+
+// Importar estilos do tema selecionado
+const adminTheme = Astro.cookies.get('admin_theme')?.value || 'default';
+
+// Função para obter temas disponíveis para o admin
+const getAvailableThemes = () => {
+  return [
+    { id: 'default', name: 'Tema Padrão' },
+    { id: 'dark', name: 'Tema Escuro' },
+    { id: 'default-theme', name: 'Site Default Theme' },
+    // Outros temas disponíveis
+  ];
+};
+
+// Função para obter metadados do tema
+const getThemeMetadata = (themeKey) => {
+  try {
+    // Temas internos do admin
+    if (themeKey === 'default') {
+      return {
+        name: "Tema Padrão Konduza",
+        type: "internal",
+        colors: {
+          primary: "#4f46e5",
+          secondary: "#64748b",
+          background: "#f9fafb"
+        }
+      };
+    }
+    
+    if (themeKey === 'dark') {
+      return {
+        name: "Tema Escuro Konduza",
+        type: "internal",
+        colors: {
+          primary: "#6366f1",
+          secondary: "#64748b",
+          background: "#1e1e2e"
+        }
+      };
+    }
+    
+    // Se for um tema de site, tente carregar do sistema
+    if (themeKey === 'default-theme') {
+      return {
+        name: "Tema Padrão Konduza Site",
+        type: "site",
+        colors: {
+          primary: "#7752FE",
+          secondary: "#2EC4B6",
+          background: "#FFFFFF"
+        }
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Erro ao carregar tema:', error);
+    return null;
+  }
+};
+
+const themeData = getThemeMetadata(adminTheme);
+const availableThemes = getAvailableThemes();
+---
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title} | Konduza Admin</title>
+  
+  <!-- Base Admin CSS -->
   <link rel="stylesheet" href="/admin/css/admin.css">
-  <style>
+  
+  <!-- Tema dinâmico baseado nas configurações -->
+  {adminTheme !== 'default' && <link rel="stylesheet" href={`/admin/themes/${adminTheme}.css`} />}
+  
+  <style define:vars={{
+    themeColorPrimary: themeData?.colors?.primary || '#4f46e5',
+    themeColorSecondary: themeData?.colors?.secondary || '#64748b',
+    themeColorBackground: themeData?.colors?.background || '#f9fafb'
+  }}>
+    /* Variáveis de cores dinâmicas do tema selecionado */
+    :root {
+      --primary: var(--themeColorPrimary);
+      --secondary: var(--themeColorSecondary);
+      --bg-light: var(--themeColorBackground);
+    }
+    
     /* Estilos para tratamento de imagens quebradas */
     .theme-thumbnail {
       position: relative;
