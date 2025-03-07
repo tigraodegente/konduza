@@ -15,24 +15,6 @@ interface Props {
 
 // As páginas filhas devem passar os dados do usuário como propriedade
 const { title, currentSection = 'dashboard', userData = { name: 'Administrador', email: '', roles: [], avatarUrl: '' } } = Astro.props;
----
-
-// src/layouts/AdminLayout.astro
-import UserAvatar from '../components/UserAvatar.astro';
-
-interface Props {
-  title: string;
-  currentSection?: string;
-  userData?: {
-    name: string;
-    email: string;
-    roles: string[];
-    avatarUrl?: string;
-  };
-}
-
-// As páginas filhas devem passar os dados do usuário como propriedade
-const { title, currentSection = 'dashboard', userData = { name: 'Administrador', email: '', roles: [], avatarUrl: '' } } = Astro.props;
 
 // Importar estilos do tema selecionado
 const adminTheme = Astro.cookies.get('admin_theme')?.value || 'default';
@@ -50,9 +32,8 @@ const getAvailableThemes = () => {
 // Função para obter metadados do tema
 const getThemeMetadata = (themeKey) => {
   try {
-    // Temas internos do admin
-    if (themeKey === 'default') {
-      return {
+    const themes = {
+      'default': {
         name: "Tema Padrão Konduza",
         type: "internal",
         colors: {
@@ -60,11 +41,8 @@ const getThemeMetadata = (themeKey) => {
           secondary: "#64748b",
           background: "#f9fafb"
         }
-      };
-    }
-    
-    if (themeKey === 'dark') {
-      return {
+      },
+      'dark': {
         name: "Tema Escuro Konduza",
         type: "internal",
         colors: {
@@ -72,12 +50,8 @@ const getThemeMetadata = (themeKey) => {
           secondary: "#64748b",
           background: "#1e1e2e"
         }
-      };
-    }
-    
-    // Se for um tema de site, tente carregar do sistema
-    if (themeKey === 'default-theme') {
-      return {
+      },
+      'default-theme': {
         name: "Tema Padrão Konduza Site",
         type: "site",
         colors: {
@@ -85,10 +59,10 @@ const getThemeMetadata = (themeKey) => {
           secondary: "#2EC4B6",
           background: "#FFFFFF"
         }
-      };
-    }
+      }
+    };
     
-    return null;
+    return themes[themeKey] || null;
   } catch (error) {
     console.error('Erro ao carregar tema:', error);
     return null;
@@ -113,9 +87,9 @@ const availableThemes = getAvailableThemes();
   {adminTheme !== 'default' && <link rel="stylesheet" href={`/admin/themes/${adminTheme}.css`} />}
   
   <style define:vars={{
-    themeColorPrimary: themeData?.colors?.primary || '#4f46e5',
-    themeColorSecondary: themeData?.colors?.secondary || '#64748b',
-    themeColorBackground: themeData?.colors?.background || '#f9fafb'
+    "themeColorPrimary": themeData?.colors?.primary || '#4f46e5',
+    "themeColorSecondary": themeData?.colors?.secondary || '#64748b',
+    "themeColorBackground": themeData?.colors?.background || '#f9fafb'
   }}>
     /* Variáveis de cores dinâmicas do tema selecionado */
     :root {
