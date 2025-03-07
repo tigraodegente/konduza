@@ -1,0 +1,301 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getAdminSession } from '../../../utils/api.js';
+
+// Verificar autenticação do admin
+const session = await getAdminSession(Astro.request);
+if (!session) {
+  return Astro.redirect('/login?redirect=/admin/content');
+}
+
+// Dados para o template
+const pageTitle = "Gerenciamento de Conteúdo";
+---
+
+<AdminLayout title={pageTitle} currentSection="content" userData={session}>
+  <div class="content-container">
+    <div class="page-header">
+      <div class="page-title">
+        <h1 class="text-2xl font-bold">{pageTitle}</h1>
+        <p class="text-sm text-gray-600">Gerencie o conteúdo do seu site</p>
+      </div>
+      <div class="page-actions">
+        <a href="/admin/content/criar" class="btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Criar Conteúdo
+        </a>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+      <!-- Cartão de Páginas -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-blue-100 text-blue-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Páginas</h2>
+            <p class="text-gray-600 text-sm mt-1">Páginas do seu site</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Gerencie as páginas do seu site, como Home, Sobre, Contato, etc.
+        </p>
+        <a href="/admin/content/paginas" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <span>Gerenciar páginas</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+      
+      <!-- Cartão de Posts -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-green-100 text-green-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Posts</h2>
+            <p class="text-gray-600 text-sm mt-1">Blog e artigos</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Gerencie posts de blog, notícias, artigos e outros conteúdos datados.
+        </p>
+        <a href="/admin/content/posts" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <span>Gerenciar posts</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+      
+      <!-- Cartão de Produtos -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-purple-100 text-purple-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Produtos</h2>
+            <p class="text-gray-600 text-sm mt-1">Produtos e catálogo</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Gerencie produtos, categorias e coleções para sua loja online.
+        </p>
+        <a href="/admin/content/produtos" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <span>Gerenciar produtos</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+      
+      <!-- Cartão de Formulários -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-indigo-100 text-indigo-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 11 12 14 22 4"></polyline>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Formulários</h2>
+            <p class="text-gray-600 text-sm mt-1">Formulários e entradas de dados</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Gerencie formulários de contato, pesquisas e outras entradas de dados.
+        </p>
+        <a href="/admin/content/formularios" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <span>Gerenciar formulários</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+      
+      <!-- Cartão de Categorias -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-yellow-100 text-yellow-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Categorias</h2>
+            <p class="text-gray-600 text-sm mt-1">Organização do conteúdo</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Gerencie categorias, tags e taxonomias para organizar seu conteúdo.
+        </p>
+        <a href="/admin/content/categorias" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <span>Gerenciar categorias</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+      
+      <!-- Cartão de Tipos de Conteúdo -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-red-100 text-red-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <rect x="7" y="7" width="3" height="9"></rect>
+              <rect x="14" y="7" width="3" height="5"></rect>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Tipos de Conteúdo</h2>
+            <p class="text-gray-600 text-sm mt-1">Modelos e esquemas</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Defina os tipos de conteúdo, campos personalizados e esquemas de dados.
+        </p>
+        <a href="/admin/content/tipos" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <span>Gerenciar tipos</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+    </div>
+    
+    <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-lg font-medium mb-4">Estatísticas de Conteúdo</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="p-4 bg-blue-50 rounded-lg">
+          <div class="text-blue-700 font-semibold text-lg">12</div>
+          <div class="text-sm text-gray-600">Páginas</div>
+        </div>
+        <div class="p-4 bg-green-50 rounded-lg">
+          <div class="text-green-700 font-semibold text-lg">24</div>
+          <div class="text-sm text-gray-600">Posts</div>
+        </div>
+        <div class="p-4 bg-purple-50 rounded-lg">
+          <div class="text-purple-700 font-semibold text-lg">45</div>
+          <div class="text-sm text-gray-600">Produtos</div>
+        </div>
+        <div class="p-4 bg-yellow-50 rounded-lg">
+          <div class="text-yellow-700 font-semibold text-lg">8</div>
+          <div class="text-sm text-gray-600">Formulários</div>
+        </div>
+      </div>
+      
+      <div class="mt-6">
+        <h3 class="font-medium mb-2">Conteúdo Recente</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Atualizado</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr>
+                <td class="px-4 py-3">
+                  <div class="text-sm font-medium">Página Inicial</div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-sm text-gray-700">Página</div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Publicado</span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-sm text-gray-700">Hoje, 15:30</div>
+                </td>
+                <td class="px-4 py-3 flex space-x-2">
+                  <a href="#" class="text-indigo-600 hover:text-indigo-900">Editar</a>
+                  <a href="#" class="text-gray-600 hover:text-gray-900">Visualizar</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3">
+                  <div class="text-sm font-medium">Novidades do mês</div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-sm text-gray-700">Post</div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Rascunho</span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-sm text-gray-700">Ontem, 10:15</div>
+                </td>
+                <td class="px-4 py-3 flex space-x-2">
+                  <a href="#" class="text-indigo-600 hover:text-indigo-900">Editar</a>
+                  <a href="#" class="text-gray-600 hover:text-gray-900">Visualizar</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3">
+                  <div class="text-sm font-medium">Produto Destaque</div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-sm text-gray-700">Produto</div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Publicado</span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-sm text-gray-700">2 dias atrás</div>
+                </td>
+                <td class="px-4 py-3 flex space-x-2">
+                  <a href="#" class="text-indigo-600 hover:text-indigo-900">Editar</a>
+                  <a href="#" class="text-gray-600 hover:text-gray-900">Visualizar</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  .btn-primary {
+    @apply inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+</style>

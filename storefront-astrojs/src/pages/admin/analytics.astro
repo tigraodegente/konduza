@@ -1,0 +1,424 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getAdminSession } from '../../utils/api.js';
+
+// Verificar autenticação do admin
+const session = await getAdminSession(Astro.request);
+if (!session) {
+  return Astro.redirect('/login?redirect=/admin/analytics');
+}
+
+// Dados para o template
+const pageTitle = "Estatísticas";
+
+// Dados simulados de métricas
+const metrics = {
+  visitantes: {
+    total: 12548,
+    aumento: 18.7,
+    periodoAnterior: 10570
+  },
+  pageViews: {
+    total: 43215,
+    aumento: 22.3,
+    periodoAnterior: 35336
+  },
+  taxaConversao: {
+    total: 3.2,
+    aumento: 0.8,
+    periodoAnterior: 2.4
+  },
+  tempoMedio: {
+    total: '2m 45s',
+    aumento: -5.2,
+    periodoAnterior: '2m 54s'
+  }
+};
+
+// Dados simulados para o gráfico de tráfego diário
+const trafegoSemanal = [
+  { dia: 'Seg', visitas: 1456 },
+  { dia: 'Ter', visitas: 1378 },
+  { dia: 'Qua', visitas: 1642 },
+  { dia: 'Qui', visitas: 1798 },
+  { dia: 'Sex', visitas: 2105 },
+  { dia: 'Sáb', visitas: 1809 },
+  { dia: 'Dom', visitas: 1360 }
+];
+
+// Dados simulados para o gráfico de fontes de tráfego
+const fontesTrafego = [
+  { fonte: 'Busca orgânica', porcentagem: 42.8, cor: '#4f46e5' },
+  { fonte: 'Tráfego direto', porcentagem: 28.3, cor: '#3b82f6' },
+  { fonte: 'Referência', porcentagem: 15.4, cor: '#06b6d4' },
+  { fonte: 'Mídias sociais', porcentagem: 10.2, cor: '#8b5cf6' },
+  { fonte: 'Email', porcentagem: 3.3, cor: '#ec4899' }
+];
+
+// Dados simulados para páginas mais visitadas
+const paginasPopulares = [
+  { titulo: 'Página Inicial', visitas: 12420, caminho: '/', conversao: 4.2 },
+  { titulo: 'Sobre Nós', visitas: 5632, caminho: '/sobre', conversao: 2.8 },
+  { titulo: 'Produto Destaque', visitas: 4876, caminho: '/produtos/destaque', conversao: 7.3 },
+  { titulo: 'Blog', visitas: 3967, caminho: '/blog', conversao: 1.5 },
+  { titulo: 'Contato', visitas: 2845, caminho: '/contato', conversao: 5.1 }
+];
+
+// Função para formatar números
+const formatNumber = (num) => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+---
+
+<AdminLayout title={pageTitle} currentSection="dashboard" userData={session}>
+  <div class="content-container">
+    <div class="page-header">
+      <div class="page-title">
+        <h1 class="text-2xl font-bold">{pageTitle}</h1>
+        <p class="text-sm text-gray-600">Visualize dados de desempenho do site</p>
+      </div>
+      <div class="page-actions">
+        <div class="flex items-center space-x-3">
+          <label for="period" class="text-sm text-gray-600">Período:</label>
+          <select id="period" class="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <option value="7">Últimos 7 dias</option>
+            <option value="30">Últimos 30 dias</option>
+            <option value="90">Últimos 3 meses</option>
+            <option value="365">Último ano</option>
+            <option value="custom">Personalizado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Cartões de métricas principais -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-sm font-medium text-gray-500">Visitantes Únicos</h3>
+            <p class="text-2xl font-bold">{formatNumber(metrics.visitantes.total)}</p>
+          </div>
+          <div class={`text-sm font-medium rounded-full px-2 py-1 ${metrics.visitantes.aumento >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {metrics.visitantes.aumento >= 0 ? '+' : ''}{metrics.visitantes.aumento}%
+          </div>
+        </div>
+        <div class="flex items-center text-sm text-gray-500">
+          <span>vs. {formatNumber(metrics.visitantes.periodoAnterior)}</span>
+          <span class="mx-1">•</span>
+          <span>Período anterior</span>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-sm font-medium text-gray-500">Visualizações de Página</h3>
+            <p class="text-2xl font-bold">{formatNumber(metrics.pageViews.total)}</p>
+          </div>
+          <div class={`text-sm font-medium rounded-full px-2 py-1 ${metrics.pageViews.aumento >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {metrics.pageViews.aumento >= 0 ? '+' : ''}{metrics.pageViews.aumento}%
+          </div>
+        </div>
+        <div class="flex items-center text-sm text-gray-500">
+          <span>vs. {formatNumber(metrics.pageViews.periodoAnterior)}</span>
+          <span class="mx-1">•</span>
+          <span>Período anterior</span>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-sm font-medium text-gray-500">Taxa de Conversão</h3>
+            <p class="text-2xl font-bold">{metrics.taxaConversao.total}%</p>
+          </div>
+          <div class={`text-sm font-medium rounded-full px-2 py-1 ${metrics.taxaConversao.aumento >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {metrics.taxaConversao.aumento >= 0 ? '+' : ''}{metrics.taxaConversao.aumento}%
+          </div>
+        </div>
+        <div class="flex items-center text-sm text-gray-500">
+          <span>vs. {metrics.taxaConversao.periodoAnterior}%</span>
+          <span class="mx-1">•</span>
+          <span>Período anterior</span>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-sm font-medium text-gray-500">Tempo Médio</h3>
+            <p class="text-2xl font-bold">{metrics.tempoMedio.total}</p>
+          </div>
+          <div class={`text-sm font-medium rounded-full px-2 py-1 ${metrics.tempoMedio.aumento >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {metrics.tempoMedio.aumento >= 0 ? '+' : ''}{metrics.tempoMedio.aumento}%
+          </div>
+        </div>
+        <div class="flex items-center text-sm text-gray-500">
+          <span>vs. {metrics.tempoMedio.periodoAnterior}</span>
+          <span class="mx-1">•</span>
+          <span>Período anterior</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Gráficos -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+      <!-- Gráfico de tráfego semanal - 2/3 largura -->
+      <div class="bg-white p-6 rounded-lg shadow-md lg:col-span-2">
+        <h3 class="text-lg font-medium mb-4">Tráfego Semanal</h3>
+        
+        <div class="flex items-end space-x-2 h-64">
+          {trafegoSemanal.map(dia => {
+            const altura = Math.round((dia.visitas / 2200) * 100);
+            return (
+              <div class="flex-1 flex flex-col items-center">
+                <div class="w-full bg-blue-100 rounded-t relative" style={`height: ${altura}%`}>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="text-xs font-medium text-blue-800 transform -rotate-90 md:rotate-0">{dia.visitas}</div>
+                  </div>
+                </div>
+                <div class="text-xs text-gray-600 mt-2">{dia.dia}</div>
+              </div>
+            );
+          })}
+        </div>
+        
+        <div class="mt-4 flex justify-center">
+          <button class="text-sm text-blue-600 hover:text-blue-700">
+            Ver relatório detalhado →
+          </button>
+        </div>
+      </div>
+      
+      <!-- Gráfico de fontes de tráfego - 1/3 largura -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-medium mb-4">Fontes de Tráfego</h3>
+        
+        <div class="relative h-64">
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-32 h-32 rounded-full border-8 border-gray-100 flex items-center justify-center">
+              <span class="text-2xl font-bold">100%</span>
+            </div>
+          </div>
+          
+          <svg viewBox="0 0 100 100" class="w-full h-full">
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f3f4f6" stroke-width="20" />
+            
+            {(() => {
+              let acumulado = 0;
+              return fontesTrafego.map(fonte => {
+                const comprimento = 2 * Math.PI * 40;
+                const fatia = (fonte.porcentagem / 100) * comprimento;
+                const inicio = acumulado;
+                acumulado += fatia;
+                
+                return (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="transparent"
+                    stroke={fonte.cor}
+                    stroke-width="20"
+                    stroke-dasharray={`${fatia} ${comprimento - fatia}`}
+                    stroke-dashoffset={-inicio}
+                    transform="rotate(-90 50 50)"
+                  />
+                );
+              });
+            })()}
+          </svg>
+        </div>
+        
+        <div class="mt-4 space-y-2">
+          {fontesTrafego.map(fonte => (
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div class="w-3 h-3 rounded-full mr-2" style={`background-color: ${fonte.cor}`}></div>
+                <span class="text-sm text-gray-600">{fonte.fonte}</span>
+              </div>
+              <span class="text-sm font-medium">{fonte.porcentagem}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tabela de páginas populares -->
+    <div class="mt-6 bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="font-medium">Páginas Mais Visitadas</h3>
+        <button class="text-sm text-blue-600 hover:text-blue-700">
+          Ver todas
+        </button>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Página
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Caminho
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Visualizações
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Taxa de Conversão
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {paginasPopulares.map(pagina => (
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">{pagina.titulo}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-500">{pagina.caminho}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  <div class="text-sm text-gray-900">{formatNumber(pagina.visitas)}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  <div class={`text-sm inline-flex items-center px-2.5 py-0.5 rounded-full ${
+                    pagina.conversao > 5 ? 'bg-green-100 text-green-800' :
+                    pagina.conversao > 3 ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {pagina.conversao}%
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Rótulos de metas e alertas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-medium mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+          </svg>
+          Metas de Desempenho
+        </h3>
+        
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-medium text-gray-700">Visitantes mensais</span>
+              <span class="text-sm font-medium text-gray-700">70%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div class="bg-blue-600 h-2.5 rounded-full" style="width: 70%"></div>
+            </div>
+            <div class="flex justify-between mt-1 text-xs text-gray-500">
+              <span>Meta: 15.000</span>
+              <span>Atual: 12.548</span>
+            </div>
+          </div>
+          
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-medium text-gray-700">Taxa de conversão</span>
+              <span class="text-sm font-medium text-gray-700">64%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div class="bg-green-600 h-2.5 rounded-full" style="width: 64%"></div>
+            </div>
+            <div class="flex justify-between mt-1 text-xs text-gray-500">
+              <span>Meta: 5%</span>
+              <span>Atual: 3.2%</span>
+            </div>
+          </div>
+          
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-medium text-gray-700">Páginas por sessão</span>
+              <span class="text-sm font-medium text-gray-700">80%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div class="bg-purple-600 h-2.5 rounded-full" style="width: 80%"></div>
+            </div>
+            <div class="flex justify-between mt-1 text-xs text-gray-500">
+              <span>Meta: 4 páginas</span>
+              <span>Atual: 3.2 páginas</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-medium mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          Alertas e Recomendações
+        </h3>
+        
+        <ul class="space-y-3">
+          <li class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+            <div class="flex">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-yellow-800">Taxa de rejeição alta na página Sobre</p>
+                <p class="text-xs text-yellow-700 mt-1">A taxa de rejeição de 68% está acima da média do site (45%)</p>
+              </div>
+            </div>
+          </li>
+          
+          <li class="p-3 bg-green-50 rounded-lg border border-green-200">
+            <div class="flex">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-green-800">Produto Destaque performando bem</p>
+                <p class="text-xs text-green-700 mt-1">Taxa de conversão 128% acima da média do site</p>
+              </div>
+            </div>
+          </li>
+          
+          <li class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div class="flex">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-blue-800">Recomendação: Otimizar SEO</p>
+                <p class="text-xs text-blue-700 mt-1">Melhorar títulos e meta descrições pode aumentar o tráfego orgânico</p>
+              </div>
+            </div>
+          </li>
+          
+          <li class="p-3 bg-red-50 rounded-lg border border-red-200">
+            <div class="flex">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-red-800">Alerta: Tempo de carregamento alto</p>
+                <p class="text-xs text-red-700 mt-1">Página de blog está levando 5.2s para carregar (ideal: < 3s)</p>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  // JavaScript interativo seria adicionado aqui para gráficos dinâmicos
+  // Em produção, poderia usar bibliotecas como Chart.js ou D3.js
+</script>

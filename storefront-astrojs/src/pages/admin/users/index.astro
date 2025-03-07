@@ -1,0 +1,310 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getAdminSession } from '../../../utils/api.js';
+import UserAvatar from '../../../components/UserAvatar.astro';
+
+// Verificar autenticação do admin
+const session = await getAdminSession(Astro.request);
+if (!session) {
+  return Astro.redirect('/login?redirect=/admin/users');
+}
+
+// Verificar se o usuário é administrador
+if (!session.roles.includes('admin')) {
+  return Astro.redirect('/admin?error=unauthorized');
+}
+
+// Dados para o template
+const pageTitle = "Gerenciamento de Usuários";
+
+// Dados simulados de usuários
+const users = [
+  {
+    id: '1',
+    name: 'Admin Principal',
+    email: 'admin@konduza.com',
+    role: 'admin',
+    status: 'active',
+    lastLogin: '2025-03-07T14:30:00Z',
+    avatarUrl: null
+  },
+  {
+    id: '2',
+    name: 'João Silva',
+    email: 'joao@exemplo.com',
+    role: 'editor',
+    status: 'active',
+    lastLogin: '2025-03-05T10:15:00Z',
+    avatarUrl: null
+  },
+  {
+    id: '3',
+    name: 'Maria Oliveira',
+    email: 'maria@exemplo.com',
+    role: 'user',
+    status: 'pending',
+    lastLogin: null,
+    avatarUrl: null
+  },
+  {
+    id: '4',
+    name: 'Pedro Santos',
+    email: 'pedro@exemplo.com',
+    role: 'editor',
+    status: 'inactive',
+    lastLogin: '2025-02-20T08:45:00Z',
+    avatarUrl: null
+  },
+  {
+    id: '5',
+    name: 'Ana Souza',
+    email: 'ana@exemplo.com',
+    role: 'user',
+    status: 'active',
+    lastLogin: '2025-03-06T16:20:00Z',
+    avatarUrl: null
+  }
+];
+
+// Função para formatar data
+const formatDate = (dateString) => {
+  if (!dateString) return 'Nunca';
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now - date);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    return 'Hoje';
+  } else if (diffDays === 1) {
+    return 'Ontem';
+  } else if (diffDays < 7) {
+    return `${diffDays} dias atrás`;
+  } else {
+    return date.toLocaleDateString('pt-BR');
+  }
+};
+
+// Função para obter o rótulo do papel
+const getRoleLabel = (role) => {
+  const roles = {
+    admin: { label: 'Administrador', class: 'bg-purple-100 text-purple-800' },
+    editor: { label: 'Editor', class: 'bg-blue-100 text-blue-800' },
+    user: { label: 'Usuário', class: 'bg-gray-100 text-gray-800' }
+  };
+  
+  return roles[role] || { label: role, class: 'bg-gray-100 text-gray-800' };
+};
+
+// Função para obter o rótulo do status
+const getStatusLabel = (status) => {
+  const statuses = {
+    active: { label: 'Ativo', class: 'bg-green-100 text-green-800' },
+    inactive: { label: 'Inativo', class: 'bg-gray-100 text-gray-800' },
+    pending: { label: 'Pendente', class: 'bg-yellow-100 text-yellow-800' },
+    suspended: { label: 'Suspenso', class: 'bg-red-100 text-red-800' }
+  };
+  
+  return statuses[status] || { label: status, class: 'bg-gray-100 text-gray-800' };
+};
+---
+
+<AdminLayout title={pageTitle} currentSection="users" userData={session}>
+  <div class="content-container">
+    <div class="page-header">
+      <div class="page-title">
+        <h1 class="text-2xl font-bold">{pageTitle}</h1>
+        <p class="text-sm text-gray-600">Gerencie usuários e permissões do sistema</p>
+      </div>
+      <div class="page-actions">
+        <a href="/admin/users/criar" class="btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Adicionar Usuário
+        </a>
+      </div>
+    </div>
+    
+    <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+      <div class="flex justify-between mb-4">
+        <h2 class="text-lg font-medium">Lista de Usuários</h2>
+        <div class="flex space-x-2">
+          <div class="relative">
+            <input type="text" placeholder="Buscar usuários..." class="pl-8 pr-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-2.5 top-3 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <select class="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <option value="">Todos os papéis</option>
+            <option value="admin">Administrador</option>
+            <option value="editor">Editor</option>
+            <option value="user">Usuário</option>
+          </select>
+          <select class="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <option value="">Todos os status</option>
+            <option value="active">Ativo</option>
+            <option value="inactive">Inativo</option>
+            <option value="pending">Pendente</option>
+            <option value="suspended">Suspenso</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Papel</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último Login</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {users.map(user => {
+              const roleInfo = getRoleLabel(user.role);
+              const statusInfo = getStatusLabel(user.status);
+              return (
+                <tr>
+                  <td class="px-4 py-3">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <UserAvatar name={user.name} avatarUrl={user.avatarUrl} size="md" />
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div class="text-sm text-gray-500">{user.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class={`px-2 py-1 text-xs rounded-full ${roleInfo.class}`}>
+                      {roleInfo.label}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class={`px-2 py-1 text-xs rounded-full ${statusInfo.class}`}>
+                      {statusInfo.label}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-700">
+                    {formatDate(user.lastLogin)}
+                  </td>
+                  <td class="px-4 py-3 text-sm flex space-x-2">
+                    <a href={`/admin/users/${user.id}`} class="text-indigo-600 hover:text-indigo-900">Editar</a>
+                    <button class="text-gray-600 hover:text-gray-900">Desativar</button>
+                    <button class="text-red-600 hover:text-red-900">Excluir</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="mt-4 flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+          Mostrando <span class="font-medium">1</span> a <span class="font-medium">5</span> de <span class="font-medium">5</span> usuários
+        </div>
+        <div class="flex space-x-2">
+          <button disabled class="px-3 py-1 rounded border border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed">
+            Anterior
+          </button>
+          <button disabled class="px-3 py-1 rounded border border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed">
+            Próximo
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-blue-100 text-blue-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Papéis e Permissões</h2>
+            <p class="text-gray-600 text-sm mt-1">Gerenciar níveis de acesso</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Configure quais usuários têm acesso às diferentes funcionalidades do sistema.
+        </p>
+        <a href="/admin/users/permissoes" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <span>Gerenciar permissões</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-green-100 text-green-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Políticas de Senha</h2>
+            <p class="text-gray-600 text-sm mt-1">Segurança das contas</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Configure regras de senhas, requisitos de segurança e políticas de autenticação.
+        </p>
+        <a href="/admin/settings/seguranca" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <span>Configurar políticas</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-yellow-100 text-yellow-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Atividade de Usuários</h2>
+            <p class="text-gray-600 text-sm mt-1">Monitoramento e logs</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Visualize registros de atividade dos usuários, sessões ativas e histórico de login.
+        </p>
+        <a href="/admin/users/atividade" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <span>Ver atividade</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  .btn-primary {
+    @apply inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+</style>

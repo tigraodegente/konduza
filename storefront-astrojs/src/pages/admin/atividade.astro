@@ -1,0 +1,407 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getAdminSession } from '../../utils/api.js';
+import UserAvatar from '../../components/UserAvatar.astro';
+
+// Verificar autenticação do admin
+const session = await getAdminSession(Astro.request);
+if (!session) {
+  return Astro.redirect('/login?redirect=/admin/atividade');
+}
+
+// Dados para o template
+const pageTitle = "Atividade Recente";
+
+// Dados simulados de atividades
+const activities = [
+  {
+    id: '1',
+    user: {
+      name: 'Admin Principal',
+      email: 'admin@konduza.com',
+      role: 'admin',
+      avatarUrl: null
+    },
+    action: 'created',
+    target: 'página inicial',
+    targetType: 'page',
+    targetId: '123',
+    timestamp: '2025-03-07T14:30:00Z',
+    details: 'Criou a página inicial do site Exemplo Corp'
+  },
+  {
+    id: '2',
+    user: {
+      name: 'João Silva',
+      email: 'joao@exemplo.com',
+      role: 'editor',
+      avatarUrl: null
+    },
+    action: 'updated',
+    target: 'post sobre novidades',
+    targetType: 'post',
+    targetId: '456',
+    timestamp: '2025-03-07T10:15:00Z',
+    details: 'Atualizou o post "Novidades do mês" com novas imagens'
+  },
+  {
+    id: '3',
+    user: {
+      name: 'Maria Oliveira',
+      email: 'maria@exemplo.com',
+      role: 'user',
+      avatarUrl: null
+    },
+    action: 'uploaded',
+    target: 'novas imagens',
+    targetType: 'media',
+    targetId: '789',
+    timestamp: '2025-03-06T16:45:00Z',
+    details: 'Fez upload de 5 novas imagens para a galeria'
+  },
+  {
+    id: '4',
+    user: {
+      name: 'Pedro Santos',
+      email: 'pedro@exemplo.com',
+      role: 'editor',
+      avatarUrl: null
+    },
+    action: 'deleted',
+    target: 'produto antigo',
+    targetType: 'product',
+    targetId: '321',
+    timestamp: '2025-03-06T09:20:00Z',
+    details: 'Removeu o produto "Modelo Antigo" da loja'
+  },
+  {
+    id: '5',
+    user: {
+      name: 'Admin Principal',
+      email: 'admin@konduza.com',
+      role: 'admin',
+      avatarUrl: null
+    },
+    action: 'installed',
+    target: 'novo tema',
+    targetType: 'theme',
+    targetId: '987',
+    timestamp: '2025-03-05T11:30:00Z',
+    details: 'Instalou o tema "Modern Commerce" para o site principal'
+  },
+  {
+    id: '6',
+    user: {
+      name: 'Ana Souza',
+      email: 'ana@exemplo.com',
+      role: 'user',
+      avatarUrl: null
+    },
+    action: 'logged_in',
+    target: 'painel admin',
+    targetType: 'system',
+    targetId: null,
+    timestamp: '2025-03-05T08:15:00Z',
+    details: 'Realizou login no painel administrativo'
+  },
+  {
+    id: '7',
+    user: {
+      name: 'João Silva',
+      email: 'joao@exemplo.com',
+      role: 'editor',
+      avatarUrl: null
+    },
+    action: 'published',
+    target: 'nova página de contato',
+    targetType: 'page',
+    targetId: '654',
+    timestamp: '2025-03-04T14:45:00Z',
+    details: 'Publicou a página de contato após revisão'
+  },
+  {
+    id: '8',
+    user: {
+      name: 'Pedro Santos',
+      email: 'pedro@exemplo.com',
+      role: 'editor',
+      avatarUrl: null
+    },
+    action: 'updated',
+    target: 'configurações do site',
+    targetType: 'settings',
+    targetId: null,
+    timestamp: '2025-03-04T10:30:00Z',
+    details: 'Atualizou configurações de SEO do site principal'
+  }
+];
+
+// Função para formatar data
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now - date);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    const hours = Math.floor(diffTime / (1000 * 60 * 60));
+    if (hours < 1) {
+      const minutes = Math.floor(diffTime / (1000 * 60));
+      return minutes < 1 ? 'Agora mesmo' : `${minutes} minutos atrás`;
+    }
+    return `${hours} horas atrás`;
+  } else if (diffDays === 1) {
+    return 'Ontem';
+  } else if (diffDays < 7) {
+    return `${diffDays} dias atrás`;
+  } else {
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+};
+
+// Função para obter classe de cor baseada na ação
+const getActionClass = (action) => {
+  const actions = {
+    created: 'bg-green-100 text-green-800',
+    updated: 'bg-blue-100 text-blue-800',
+    deleted: 'bg-red-100 text-red-800',
+    uploaded: 'bg-purple-100 text-purple-800',
+    published: 'bg-indigo-100 text-indigo-800',
+    installed: 'bg-yellow-100 text-yellow-800',
+    logged_in: 'bg-gray-100 text-gray-800'
+  };
+  
+  return actions[action] || 'bg-gray-100 text-gray-800';
+};
+
+// Função para obter rótulo legível da ação
+const getActionLabel = (action) => {
+  const actions = {
+    created: 'Criou',
+    updated: 'Atualizou',
+    deleted: 'Removeu',
+    uploaded: 'Enviou',
+    published: 'Publicou',
+    installed: 'Instalou',
+    logged_in: 'Login'
+  };
+  
+  return actions[action] || action;
+};
+
+// Função para obter ícone baseado no tipo de alvo
+const getTargetIcon = (targetType) => {
+  const types = {
+    page: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>',
+    post: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>',
+    product: '<circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>',
+    media: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline>',
+    theme: '<circle cx="12" cy="12" r="10"></circle><path d="M17.8 12.2l-5.4 5.4a1 1 0 0 1-1.4 0l-5.4-5.4a1 1 0 0 1 0-1.4L11 5.4a1 1 0 0 1 1.4 0l5.4 5.4a1 1 0 0 1 0 1.4z"></path>',
+    settings: '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>',
+    system: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line>'
+  };
+  
+  return types[targetType] || types.system;
+};
+---
+
+<AdminLayout title={pageTitle} currentSection="dashboard" userData={session}>
+  <div class="content-container">
+    <div class="page-header">
+      <div class="page-title">
+        <h1 class="text-2xl font-bold">{pageTitle}</h1>
+        <p class="text-sm text-gray-600">Registro de atividades no sistema Konduza</p>
+      </div>
+      <div class="page-actions">
+        <div class="flex space-x-2">
+          <div class="relative">
+            <input type="text" placeholder="Filtrar atividades..." class="pl-8 pr-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-2.5 top-3 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <select class="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <option value="">Todas as ações</option>
+            <option value="created">Criação</option>
+            <option value="updated">Atualização</option>
+            <option value="deleted">Remoção</option>
+            <option value="published">Publicação</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mt-6 bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-4 border-b border-gray-200 bg-gray-50">
+        <h2 class="font-medium">Registro de Atividades</h2>
+      </div>
+      <ul class="divide-y divide-gray-200">
+        {activities.map(activity => (
+          <li class="p-4 hover:bg-gray-50">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <UserAvatar name={activity.user.name} avatarUrl={activity.user.avatarUrl} size="md" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center mb-1">
+                  <p class="text-sm font-medium text-gray-900 truncate mr-2">
+                    {activity.user.name}
+                  </p>
+                  <span class={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getActionClass(activity.action)}`}>
+                    {getActionLabel(activity.action)}
+                  </span>
+                  <time class="text-xs text-gray-500 ml-auto">
+                    {formatDate(activity.timestamp)}
+                  </time>
+                </div>
+                <div class="flex items-center mb-2">
+                  <div class="mr-2 p-1 bg-gray-100 rounded text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={getTargetIcon(activity.targetType)}></svg>
+                  </div>
+                  <p class="text-sm text-gray-800">
+                    {activity.details}
+                  </p>
+                </div>
+                {activity.targetId && (
+                  <div class="mt-1">
+                    <a href="#" class="text-xs text-indigo-600 hover:text-indigo-900">
+                      Ver detalhes
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      
+      <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+          Mostrando <span class="font-medium">1</span> a <span class="font-medium">8</span> de <span class="font-medium">32</span> atividades
+        </div>
+        <div class="flex space-x-2">
+          <button class="px-3 py-1 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
+            Anterior
+          </button>
+          <button class="px-3 py-1 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
+            Próximo
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-blue-100 text-blue-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Atividade por Período</h2>
+            <p class="text-gray-600 text-sm mt-1">Filtrar por data</p>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <button class="w-full text-left px-3 py-2 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100">Hoje</button>
+          <button class="w-full text-left px-3 py-2 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">Esta Semana</button>
+          <button class="w-full text-left px-3 py-2 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">Este Mês</button>
+          <button class="w-full text-left px-3 py-2 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">Personalizado...</button>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-green-100 text-green-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Atividade por Usuário</h2>
+            <p class="text-gray-600 text-sm mt-1">Filtrar por pessoa</p>
+          </div>
+        </div>
+        <ul class="space-y-2">
+          <li>
+            <button class="w-full flex items-center px-3 py-2 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">
+              <UserAvatar name="Admin Principal" size="sm" />
+              <span class="ml-2">Admin Principal</span>
+              <span class="ml-auto bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">12</span>
+            </button>
+          </li>
+          <li>
+            <button class="w-full flex items-center px-3 py-2 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">
+              <UserAvatar name="João Silva" size="sm" />
+              <span class="ml-2">João Silva</span>
+              <span class="ml-auto bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">8</span>
+            </button>
+          </li>
+          <li>
+            <button class="w-full flex items-center px-3 py-2 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">
+              <UserAvatar name="Maria Oliveira" size="sm" />
+              <span class="ml-2">Maria Oliveira</span>
+              <span class="ml-auto bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">5</span>
+            </button>
+          </li>
+          <li>
+            <button class="w-full flex items-center px-3 py-2 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">
+              <span class="ml-2">Ver todos os usuários</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex items-start mb-4">
+          <div class="p-2 rounded-md bg-purple-100 text-purple-600 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-medium">Atividades Importantes</h2>
+            <p class="text-gray-600 text-sm mt-1">Alterações críticas</p>
+          </div>
+        </div>
+        <ul class="space-y-3">
+          <li class="flex items-center border-l-4 border-red-500 pl-3 py-2">
+            <div class="h-2 w-2 rounded-full bg-red-500 mr-2"></div>
+            <span class="text-sm">Remoção de produto</span>
+            <span class="text-xs text-gray-500 ml-auto">Pedro Santos</span>
+          </li>
+          <li class="flex items-center border-l-4 border-yellow-500 pl-3 py-2">
+            <div class="h-2 w-2 rounded-full bg-yellow-500 mr-2"></div>
+            <span class="text-sm">Instalação de tema</span>
+            <span class="text-xs text-gray-500 ml-auto">Admin Principal</span>
+          </li>
+          <li class="flex items-center border-l-4 border-blue-500 pl-3 py-2">
+            <div class="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
+            <span class="text-sm">Atualização de configurações</span>
+            <span class="text-xs text-gray-500 ml-auto">Pedro Santos</span>
+          </li>
+          <li class="flex items-center border-l-4 border-green-500 pl-3 py-2">
+            <div class="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+            <span class="text-sm">Publicação de página</span>
+            <span class="text-xs text-gray-500 ml-auto">João Silva</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
