@@ -1,0 +1,88 @@
+---
+// Componente de avatar de usuário com fallback para iniciais
+interface Props {
+  name: string;
+  avatarUrl?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+}
+
+const { 
+  name, 
+  avatarUrl = '',
+  size = 'md'
+} = Astro.props;
+
+// Gerar iniciais do nome
+const initials = name
+  .split(' ')
+  .map(part => part[0])
+  .slice(0, 2)
+  .join('')
+  .toUpperCase();
+
+// Determinar o tamanho do avatar
+const sizeMap = {
+  sm: '1.8rem',
+  md: '2.2rem',
+  lg: '3rem',
+  xl: '4rem'
+};
+
+const avatarSize = sizeMap[size];
+const fontSize = {
+  sm: '0.7rem',
+  md: '0.9rem',
+  lg: '1.2rem',
+  xl: '1.5rem'
+}[size];
+---
+
+<div class="user-avatar" style={`width: ${avatarSize}; height: ${avatarSize};`}>
+  {avatarUrl && 
+    <img 
+      src={avatarUrl} 
+      alt={`Avatar de ${name}`} 
+      title={name}
+      onError="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+    />
+  }
+  <div 
+    class="avatar-fallback" 
+    style={`font-size: ${fontSize}; ${avatarUrl ? 'display: none;' : 'display: flex;'}`}
+    aria-hidden={avatarUrl ? "true" : "false"}
+  >
+    {initials}
+  </div>
+</div>
+
+<style>
+  .user-avatar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .user-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .avatar-fallback {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--primary, #4f46e5);
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+  }
+</style>
