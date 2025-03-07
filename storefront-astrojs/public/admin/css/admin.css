@@ -122,22 +122,16 @@ button, input, select, textarea {
   transition: all var(--transition-speed) ease;
 }
 
-.admin-logo img {
-  height: 2rem;
-  margin-right: 0.5rem;
-}
-
 .admin-logo .logo-text {
-  font-weight: 600;
-  font-size: 1.2rem;
+  font-weight: 700;
+  font-size: 1.4rem;
   color: var(--primary);
   transition: opacity var(--transition-speed) ease;
+  letter-spacing: -0.5px;
 }
 
 .sidebar-collapsed .logo-text {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
+  opacity: 1;
 }
 
 .mobile-menu-toggle {
