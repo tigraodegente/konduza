@@ -130,8 +130,8 @@ button, input, select, textarea {
   letter-spacing: -0.5px;
 }
 
-.sidebar-collapsed .logo-text {
-  opacity: 1;
+.sidebar-collapsed .admin-logo {
+  /* Keep logo styling in collapsed state */
 }
 
 .mobile-menu-toggle {
@@ -226,8 +226,10 @@ button, input, select, textarea {
   border-right: 1px solid var(--border-light);
   padding: var(--spacing-md);
   overflow-y: auto;
-  transition: width var(--transition-speed) ease;
+  transition: all var(--transition-speed) ease;
   width: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-section {
@@ -269,6 +271,7 @@ button, input, select, textarea {
   left: calc(var(--sidebar-width) - 1.5rem);
   transition: all var(--transition-speed) ease;
   z-index: 30;
+  margin-top: auto;
 }
 
 .sidebar-toggle button {
@@ -296,14 +299,12 @@ button, input, select, textarea {
 
 .admin-layout.sidebar-collapsed .admin-sidebar {
   width: var(--sidebar-collapsed-width);
-  padding: var(--spacing-md) var(--spacing-xs);
+  padding: 0;
+  overflow: hidden;
 }
 
-.admin-layout.sidebar-collapsed .sidebar-section h3,
-.admin-layout.sidebar-collapsed .sidebar-section ul {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-speed) ease;
+.admin-layout.sidebar-collapsed .sidebar-section {
+  display: none;
 }
 
 .admin-layout.sidebar-collapsed .sidebar-toggle {
@@ -556,12 +557,12 @@ tr:hover {
   
   .admin-sidebar {
     width: var(--sidebar-collapsed-width);
+    padding: 0;
+    overflow: hidden;
   }
   
-  .sidebar-section h3,
-  .sidebar-section ul {
-    opacity: 0;
-    pointer-events: none;
+  .sidebar-section {
+    display: none;
   }
   
   .sidebar-toggle {
@@ -579,12 +580,11 @@ tr:hover {
   .admin-layout.sidebar-expanded .admin-sidebar {
     width: var(--sidebar-width);
     padding: var(--spacing-md);
+    overflow-y: auto;
   }
   
-  .admin-layout.sidebar-expanded .sidebar-section h3,
-  .admin-layout.sidebar-expanded .sidebar-section ul {
-    opacity: 1;
-    pointer-events: auto;
+  .admin-layout.sidebar-expanded .sidebar-section {
+    display: block;
   }
   
   .admin-layout.sidebar-expanded .sidebar-toggle {
@@ -629,12 +629,10 @@ tr:hover {
     left: 0;
     width: 80%;
     max-width: 300px;
+    padding: var(--spacing-md);
   }
   
-  .admin-layout.sidebar-expanded .sidebar-section h3,
-  .admin-layout.sidebar-expanded .sidebar-section ul {
-    opacity: 1;
-    pointer-events: auto;
+  .admin-layout.sidebar-expanded .sidebar-section {
     display: block;
   }
   
