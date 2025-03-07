@@ -28,21 +28,61 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
       <!-- Painel de importação -->
       <div class="bg-white rounded-lg shadow-md p-6">
         <div class="mb-4">
-          <p class="text-gray-700 mb-2">
-            Importe um tema no formato JSON. O sistema verificará a estrutura do tema e o importará para o Konduza.
-          </p>
-          <div class="flex space-x-2 mb-4">
-            <button id="btn-exemplo" class="text-blue-600 hover:text-blue-800 text-sm">
+          <div class="flex justify-between items-center mb-2">
+            <p class="text-gray-700">
+              Importe um tema no formato JSON para o Konduza.
+            </p>
+            <div class="flex items-center space-x-2">
+              <button id="btn-preview-panel" class="md:hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                Mostrar Preview
+              </button>
+            </div>
+          </div>
+          <div class="flex flex-wrap space-x-2 mb-4">
+            <button id="btn-exemplo" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                <path d="M14 3v5h5M16 13H8M16 17H8M10 9H8"/>
+              </svg>
               Carregar exemplo
             </button>
             <span class="text-gray-400">|</span>
-            <button id="btn-format" class="text-blue-600 hover:text-blue-800 text-sm">
+            <button id="btn-format" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="7.5 4.21 12 6.81 16.5 4.21"/>
+                <polyline points="7.5 19.79 7.5 14.6 3 12"/>
+                <polyline points="21 12 16.5 14.6 16.5 19.79"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
               Formatar JSON
             </button>
             <span class="text-gray-400">|</span>
-            <button id="btn-limpar" class="text-blue-600 hover:text-blue-800 text-sm">
+            <button id="btn-limpar" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+              </svg>
               Limpar
             </button>
+            <span class="text-gray-400">|</span>
+            <label class="text-blue-600 hover:text-blue-800 text-sm cursor-pointer flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <span>Upload</span>
+              <input 
+                type="file" 
+                id="file-input" 
+                accept=".json" 
+                class="sr-only"
+              />
+            </label>
           </div>
         </div>
 
@@ -53,14 +93,9 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
                 JSON do Tema
               </label>
               <div class="flex items-center space-x-2">
-                <label class="text-sm text-blue-600 hover:text-blue-800 cursor-pointer">
-                  <span>Upload de arquivo</span>
-                  <input 
-                    type="file" 
-                    id="file-input" 
-                    accept=".json" 
-                    class="sr-only"
-                  />
+                <label class="inline-flex items-center">
+                  <input type="checkbox" id="auto-preview" class="form-checkbox h-4 w-4 text-blue-600" checked>
+                  <span class="ml-2 text-xs text-gray-700">Preview automático</span>
                 </label>
               </div>
             </div>
@@ -120,66 +155,178 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
       </div>
 
       <!-- Painel de preview -->
-      <div class="bg-white rounded-lg shadow-md p-6">
+      <div id="preview-panel" class="bg-white rounded-lg shadow-md p-6 lg:block hidden">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-semibold">Preview do Tema</h2>
           <div class="flex space-x-2">
-            <button id="btn-refresh-preview" class="text-sm text-blue-600 hover:text-blue-800">
+            <button id="btn-refresh-preview" class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                <path d="M23 4v6h-6"/>
+                <path d="M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
               Atualizar
             </button>
-            <div class="relative inline-block">
+            <div class="relative inline-block device-selector">
               <button id="btn-viewport" class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
                 <span id="viewport-label">Desktop</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
               </button>
-              <div id="viewport-dropdown" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+              <div id="viewport-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                 <div class="py-1">
-                  <button data-width="100%" data-device="desktop" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Desktop (100%)</button>
-                  <button data-width="1024px" data-device="laptop" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Laptop (1024px)</button>
-                  <button data-width="768px" data-device="tablet" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Tablet (768px)</button>
-                  <button data-width="425px" data-device="mobile" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mobile (425px)</button>
+                  <button data-width="100%" data-device="desktop" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    Desktop (100%)
+                  </button>
+                  <button data-width="1024px" data-device="laptop" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    Laptop (1024px)
+                  </button>
+                  <button data-width="768px" data-device="tablet" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    Tablet (768px)
+                  </button>
+                  <button data-width="425px" data-device="mobile" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                      <line x1="12" y1="18" x2="12" y2="18"></line>
+                    </svg>
+                    Mobile (425px)
+                  </button>
                 </div>
               </div>
             </div>
             <div class="relative inline-block">
               <button id="btn-view-mode" class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                  <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
+                  <line x1="12" y1="22" x2="12" y2="15.5"></line>
+                  <polyline points="22 8.5 12 15.5 2 8.5"></polyline>
+                  <polyline points="2 15.5 12 8.5 22 15.5"></polyline>
+                  <line x1="12" y1="2" x2="12" y2="8.5"></line>
+                </svg>
                 <span id="view-mode-label">Preview</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
               </button>
-              <div id="view-mode-dropdown" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+              <div id="view-mode-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                 <div class="py-1">
-                  <button data-mode="preview" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Visualizar tema</button>
-                  <button data-mode="html" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Ver HTML gerado</button>
-                  <button data-mode="css" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Ver CSS gerado</button>
-                  <button data-mode="astro" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Ver código Astro</button>
+                  <button data-mode="preview" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    Visualizar tema
+                  </button>
+                  <button data-mode="html" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                      <polyline points="16 18 22 12 16 6"></polyline>
+                      <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    Ver HTML gerado
+                  </button>
+                  <button data-mode="css" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                      <path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path>
+                      <path d="M2 20h20"></path>
+                      <path d="M14 12v.01"></path>
+                    </svg>
+                    Ver CSS gerado
+                  </button>
+                  <button data-mode="astro" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                      <polyline points="16 18 22 12 16 6"></polyline>
+                      <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    Ver código Astro
+                  </button>
                 </div>
               </div>
             </div>
+            <button id="btn-editor-panel" class="md:hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm ml-2">
+              Mostrar Editor
+            </button>
           </div>
         </div>
         
-        <div id="preview-container" class="border rounded-md overflow-hidden">
+        <div id="preview-container" class="border rounded-md overflow-hidden bg-gray-100">
           <!-- Status inicial -->
           <div id="preview-status" class="flex flex-col items-center justify-center h-96 bg-gray-50 text-center p-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 mb-4">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
             <p class="text-gray-600 mb-2">Insira um JSON válido para visualizar o preview do tema</p>
             <p class="text-gray-500 text-sm">Os componentes serão renderizados conforme definido no JSON</p>
           </div>
           
           <!-- Preview do tema -->
-          <div id="preview-iframe-container" class="hidden">
-            <iframe id="preview-iframe" class="w-full transition-all duration-300" style="height: 600px; max-width: 100%;" title="Preview do Tema"></iframe>
+          <div id="preview-iframe-container" class="hidden bg-white">
+            <div class="preview-header bg-gray-200 p-2 flex justify-between items-center border-b border-gray-300">
+              <div class="preview-title text-sm text-gray-600">Preview do Tema</div>
+              <div class="preview-controls flex space-x-2">
+                <button class="preview-device-btn" data-width="425px" title="Visualizar como Mobile">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                    <line x1="12" y1="18" x2="12" y2="18"></line>
+                  </svg>
+                </button>
+                <button class="preview-device-btn" data-width="768px" title="Visualizar como Tablet">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                    <line x1="12" y1="18" x2="12" y2="18"></line>
+                  </svg>
+                </button>
+                <button class="preview-device-btn" data-width="100%" title="Visualizar como Desktop">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="iframe-wrapper flex justify-center bg-gray-100 p-4">
+              <iframe id="preview-iframe" class="transition-all duration-300 border border-gray-300 bg-white" style="height: 600px; max-width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" title="Preview do Tema"></iframe>
+            </div>
           </div>
           
           <!-- Preview do código gerado -->
-          <div id="preview-code-container" class="hidden h-96 overflow-auto">
-            <pre id="preview-code" class="p-4 font-mono text-sm whitespace-pre-wrap"></pre>
+          <div id="preview-code-container" class="hidden">
+            <div class="code-header bg-gray-800 text-white p-2 flex justify-between items-center">
+              <div class="code-title text-sm" id="code-type">HTML</div>
+              <div class="code-actions">
+                <button id="btn-copy-code" class="text-white hover:text-blue-300 text-sm flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  Copiar
+                </button>
+              </div>
+            </div>
+            <pre id="preview-code" class="p-4 font-mono text-sm whitespace-pre-wrap bg-gray-900 text-gray-200 overflow-auto h-96"></pre>
           </div>
         </div>
       </div>
@@ -273,7 +420,7 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
   const btnLimpar = document.getElementById('btn-limpar');
   const overrideExisting = document.getElementById('override-existing');
   const skipValidation = document.getElementById('skip-validation');
-  const previewMode = document.getElementById('preview-mode');
+  const autoPreviewEl = document.getElementById('auto-preview');
   const submitBtn = document.getElementById('submit-btn');
   const loadingModal = document.getElementById('loading-modal');
   const resultContainer = document.getElementById('result-container');
@@ -295,6 +442,8 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
   const previewIframe = document.getElementById('preview-iframe');
   const previewCodeContainer = document.getElementById('preview-code-container');
   const previewCode = document.getElementById('preview-code');
+  const btnCopyCode = document.getElementById('btn-copy-code');
+  const codeType = document.getElementById('code-type');
   
   // Estado da aplicação
   let currentViewport = "100%";
@@ -305,11 +454,37 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
   
   // Event listeners para a interface
   document.addEventListener('DOMContentLoaded', () => {
+    // Adicionar CSS para botões de dispositivo
+    const style = document.createElement('style');
+    style.textContent = `
+      .preview-device-btn {
+        padding: 4px;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #6b7280;
+        background: transparent;
+        border: none;
+        transition: all 0.2s;
+      }
+      .preview-device-btn:hover {
+        background: rgba(0,0,0,0.05);
+        color: #1d4ed8;
+      }
+      .preview-device-btn.active {
+        background: #e2e8f0;
+        color: #1d4ed8;
+      }
+    `;
+    document.head.appendChild(style);
+
     // Inicializar numeração de linhas
     updateLineNumbers();
     
     // Adicionar listeners para textarea
-    jsonInput.addEventListener('input', handleJsonInput);
+    jsonInput.addEventListener('input', (e) => {
+      handleJsonInput();
+      handleAutoPreview();
+    });
     jsonInput.addEventListener('scroll', syncLineNumbersScroll);
     
     // Listeners para os botões principais
@@ -322,11 +497,79 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
     
     // Listeners para preview
     btnRefreshPreview.addEventListener('click', refreshPreview);
-    previewMode.addEventListener('change', togglePreviewMode);
+    autoPreviewEl.addEventListener('change', toggleAutoPreview);
+    
+    // Botão de copiar código
+    if (btnCopyCode) {
+      btnCopyCode.addEventListener('click', () => {
+        const codeToCopy = previewCode.textContent;
+        navigator.clipboard.writeText(codeToCopy).then(() => {
+          // Feedback visual de cópia
+          const originalText = btnCopyCode.textContent;
+          btnCopyCode.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Copiado!
+          `;
+          setTimeout(() => {
+            btnCopyCode.innerHTML = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copiar
+            `;
+          }, 2000);
+        }).catch(err => {
+          console.error('Erro ao copiar: ', err);
+        });
+      });
+    }
     
     // Configuração dos dropdowns
     btnViewport.addEventListener('click', () => toggleDropdown(viewportDropdown));
     btnViewMode.addEventListener('click', () => toggleDropdown(viewModeDropdown));
+    
+    // Botões para navegação em dispositivos móveis
+    const previewPanelBtn = document.getElementById('btn-preview-panel');
+    const editorPanelBtn = document.getElementById('btn-editor-panel');
+    const previewPanel = document.getElementById('preview-panel');
+    const editorPanel = document.querySelector('.bg-white.rounded-lg.shadow-md.p-6:not(#preview-panel)');
+    
+    if (previewPanelBtn) {
+      previewPanelBtn.addEventListener('click', () => {
+        editorPanel.style.display = 'none';
+        previewPanel.style.display = 'block';
+      });
+    }
+    
+    if (editorPanelBtn) {
+      editorPanelBtn.addEventListener('click', () => {
+        previewPanel.style.display = 'none';
+        editorPanel.style.display = 'block';
+      });
+    }
+    
+    // Botões rápidos de dispositivo no preview
+    const previewDeviceButtons = document.querySelectorAll('.preview-device-btn');
+    if (previewDeviceButtons.length > 0) {
+      previewDeviceButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Remover classe ativa de todos os botões
+          previewDeviceButtons.forEach(b => b.classList.remove('active'));
+          // Adicionar classe ativa ao botão clicado
+          btn.classList.add('active');
+          // Mudar viewport
+          const width = btn.dataset.width;
+          if (previewIframe.contentDocument) {
+            previewIframe.style.width = width;
+          }
+        });
+      });
+      // Definir o botão desktop como ativo por padrão
+      previewDeviceButtons[2].classList.add('active');
+    }
     
     // Listener para botões de viewport
     viewportButtons.forEach(button => {
@@ -439,7 +682,7 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
     validationContainer.classList.add('hidden');
     
     // Desmarcar checkbox de preview para evitar atualização automática
-    previewMode.checked = false;
+    autoPreviewEl.checked = false;
     
     // Resetar preview
     previewStatus.classList.remove('hidden');
@@ -496,7 +739,7 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
         showValidationMessage('success', 'Tema válido', result.details || []);
         
         // Atualizar preview se o modo de preview estiver ativo
-        if (previewMode.checked) {
+        if (autoPreviewEl.checked) {
           refreshPreview();
         }
       } else {
@@ -594,14 +837,36 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
       'astro': 'Astro'
     }[mode];
     
+    // Atualizar o tipo de código exibido no cabeçalho do visualizador
+    if (codeType) {
+      codeType.textContent = {
+        'preview': 'Preview',
+        'html': 'HTML',
+        'css': 'CSS',
+        'astro': 'Astro'
+      }[mode];
+    }
+    
     refreshPreview();
   }
   
-  // Toggle modo de preview
-  function togglePreviewMode() {
-    if (previewMode.checked) {
+  // Auto preview com debounce
+  let previewDebounceTimer = null;
+  
+  function toggleAutoPreview() {
+    if (autoPreviewEl.checked) {
+      // Ativar o preview imediatamente na primeira mudança
       refreshPreview();
     }
+  }
+  
+  function handleAutoPreview() {
+    if (!autoPreviewEl.checked) return;
+    
+    clearTimeout(previewDebounceTimer);
+    previewDebounceTimer = setTimeout(() => {
+      refreshPreview();
+    }, 1000); // 1 segundo de debounce
   }
   
   // Atualizar preview

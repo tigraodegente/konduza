@@ -27,8 +27,14 @@ const { title, currentSection = 'dashboard', userData = { name: 'Administrador',
   <div class="admin-layout">
     <header class="admin-header">
       <div class="admin-header-left">
+        <div class="mobile-menu-toggle">
+          <button id="mobile-menu-btn">
+            <span class="icon-menu">☰</span>
+          </button>
+        </div>
         <a href="/admin" class="admin-logo">
           <img src="/admin/logo.svg" alt="Konduza" />
+          <span class="logo-text">Konduza</span>
         </a>
         <nav class="admin-main-nav">
           <a href="/admin/sites" class={currentSection === 'sites' ? 'active' : ''}>Sites</a>
@@ -155,8 +161,10 @@ const { title, currentSection = 'dashboard', userData = { name: 'Administrador',
         )}
         
         <div class="sidebar-toggle">
-          <button>
-            <span class="icon-menu-fold">◀</span>
+          <button id="sidebar-toggle-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sidebar-icon">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
           </button>
         </div>
       </aside>
@@ -184,18 +192,61 @@ const { title, currentSection = 'dashboard', userData = { name: 'Administrador',
   <script>
     // Scripts para funcionalidades interativas do admin
     document.addEventListener('DOMContentLoaded', () => {
-      const sidebarToggle = document.querySelector('.sidebar-toggle button');
+      const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
       const adminLayout = document.querySelector('.admin-layout');
+      const adminSidebar = document.querySelector('.admin-sidebar');
       const profileToggle = document.querySelector('.profile-toggle');
       const profileDropdown = document.querySelector('.profile-dropdown');
       const logoutButton = document.getElementById('logout-button');
       
       // Os dados do usuário já estão disponíveis no HTML através do servidor
       
-      // Toggle da sidebar
-      if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', () => {
-          adminLayout.classList.toggle('sidebar-collapsed');
+      // Armazenar preferência do usuário para o estado da sidebar
+      const saveSidebarState = (collapsed) => {
+        localStorage.setItem('sidebar_collapsed', collapsed ? 'true' : 'false');
+      };
+      
+      // Recuperar preferência do usuário
+      const getSidebarState = () => {
+        return localStorage.getItem('sidebar_collapsed') === 'true';
+      };
+      
+      // Inicializar com a preferência salva
+      if (getSidebarState()) {
+        adminLayout.classList.add('sidebar-collapsed');
+      } else {
+        adminLayout.classList.remove('sidebar-collapsed');
+      }
+      
+      // Toggle da sidebar desktop
+      if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', () => {
+          const isCollapsed = adminLayout.classList.toggle('sidebar-collapsed');
+          saveSidebarState(isCollapsed);
+        });
+      }
+      
+      // Toggle do menu mobile
+      if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => {
+          adminLayout.classList.toggle('sidebar-expanded');
+          
+          // Adicionar overlay para fechar o menu ao clicar fora
+          if (adminLayout.classList.contains('sidebar-expanded')) {
+            const overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            overlay.addEventListener('click', () => {
+              adminLayout.classList.remove('sidebar-expanded');
+              document.body.removeChild(overlay);
+            });
+            document.body.appendChild(overlay);
+          } else {
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (overlay) {
+              document.body.removeChild(overlay);
+            }
+          }
         });
       }
       
@@ -250,10 +301,26 @@ const { title, currentSection = 'dashboard', userData = { name: 'Administrador',
       
       // Responsividade em dispositivos móveis
       const mobileBreakpoint = 768;
+      const tabletBreakpoint = 1024;
       
       function handleResize() {
-        if (window.innerWidth < mobileBreakpoint) {
-          adminLayout.classList.add('sidebar-collapsed');
+        const windowWidth = window.innerWidth;
+        
+        if (windowWidth < mobileBreakpoint) {
+          // Em dispositivos móveis, sempre começar com sidebar fechada
+          adminLayout.classList.remove('sidebar-expanded');
+          adminLayout.classList.remove('sidebar-collapsed'); // Resetar para estado padrão no mobile
+        } else if (windowWidth < tabletBreakpoint) {
+          // Em tablets, colapsar a sidebar se não houver preferência explícita
+          if (localStorage.getItem('sidebar_collapsed') === null) {
+            adminLayout.classList.add('sidebar-collapsed');
+          }
+        } else {
+          // Em desktops, respeitar a preferência do usuário
+          // Ou abrir completamente se não houver preferência
+          if (localStorage.getItem('sidebar_collapsed') === null) {
+            adminLayout.classList.remove('sidebar-collapsed');
+          }
         }
       }
       
