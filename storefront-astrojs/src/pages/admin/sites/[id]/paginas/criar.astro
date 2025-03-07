@@ -1,0 +1,432 @@
+---
+import AdminLayout from '../../../../../layouts/AdminLayout.astro';
+import { getSite, getTemplatesForSite } from '../../../../../utils/api';
+
+// Obter ID do site a partir dos parâmetros
+const { id: siteId } = Astro.params;
+
+// Buscar informações do site
+const site = await getSite(siteId);
+
+// Se o site não existe, redirecionar para a lista de sites
+if (!site) {
+  return Astro.redirect('/admin/sites');
+}
+
+// Buscar templates disponíveis para o site
+const templates = await getTemplatesForSite(site.themeId);
+
+// Caso não haja templates, preparar um template padrão
+const defaultTemplate = {
+  id: 'default',
+  name: 'Template Padrão',
+  description: 'Template básico com cabeçalho, conteúdo e rodapé',
+};
+
+// Lista final de templates disponíveis
+const availableTemplates = templates.length > 0 ? templates : [defaultTemplate];
+---
+
+<AdminLayout title="Nova Página" currentSection="sites">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Criar Nova Página</h1>
+      <nav class="breadcrumbs">
+        <a href="/admin">Admin</a> / <a href="/admin/sites">Sites</a> / <a href={`/admin/sites/${siteId}`}>Site</a> / <a href={`/admin/sites/${siteId}/paginas`}>Páginas</a> / Nova
+      </nav>
+    </div>
+  </div>
+  
+  <div class="content-container">
+    <form id="new-page-form" class="page-form">
+      <div class="form-section">
+        <h2>Informações Básicas</h2>
+        
+        <div class="form-group">
+          <label for="page-title" class="form-label">Título da Página <span class="required">*</span></label>
+          <input type="text" id="page-title" name="title" class="form-input" required placeholder="Ex: Página Inicial">
+          <div class="form-help">O título que será exibido no navegador e nos menus</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="page-path" class="form-label">Caminho da URL <span class="required">*</span></label>
+          <div class="path-input-container">
+            <span class="path-prefix">/</span>
+            <input type="text" id="page-path" name="path" class="form-input path-input" required placeholder="Ex: sobre-nos">
+          </div>
+          <div class="form-help">
+            Use "home" para a página inicial. Não inclua barras. Use apenas letras minúsculas, números e hífens.
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="page-template" class="form-label">Template <span class="required">*</span></label>
+          <select id="page-template" name="template" class="form-select" required>
+            {availableTemplates.map(template => (
+              <option value={template.id}>{template.name}</option>
+            ))}
+          </select>
+          <div class="form-help">O layout que será utilizado para exibir a página</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="page-status" class="form-label">Status <span class="required">*</span></label>
+          <select id="page-status" name="status" class="form-select" required>
+            <option value="draft">Rascunho</option>
+            <option value="published">Publicado</option>
+          </select>
+          <div class="form-help">Define se a página fica imediatamente visível para os visitantes</div>
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <h2>SEO</h2>
+        
+        <div class="form-group">
+          <label for="page-description" class="form-label">Meta Descrição</label>
+          <textarea id="page-description" name="description" class="form-textarea" placeholder="Uma breve descrição da página para mecanismos de busca"></textarea>
+          <div class="form-help">Recomendado: até 160 caracteres</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="page-keywords" class="form-label">Palavras-chave</label>
+          <input type="text" id="page-keywords" name="keywords" class="form-input" placeholder="Ex: serviços, empresa, consultoria">
+          <div class="form-help">Palavras-chave separadas por vírgula</div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" id="cancel-btn">Cancelar</button>
+        <button type="submit" class="btn-primary" id="create-btn">Criar Página</button>
+      </div>
+    </form>
+  </div>
+</AdminLayout>
+
+<script>
+  // Script para validação e criação de página
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('new-page-form');
+    const titleInput = document.getElementById('page-title');
+    const pathInput = document.getElementById('page-path');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const siteId = window.location.pathname.split('/')[3]; // Extrair ID do site da URL
+    
+    // Gerar slug a partir do título
+    titleInput.addEventListener('input', () => {
+      if (!pathInput.value || pathInput.dataset.autoGenerated === 'true') {
+        const title = titleInput.value;
+        const slug = title.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove acentos
+          .replace(/[^\w\s-]/g, '') // Remove caracteres especiais
+          .replace(/\s+/g, '-') // Substitui espaços por hífens
+          .replace(/-+/g, '-') // Remove hífens repetidos
+          .replace(/^-+/, '') // Remove hífens do início
+          .replace(/-+$/, ''); // Remove hífens do final
+        
+        pathInput.value = slug;
+        pathInput.dataset.autoGenerated = 'true';
+      }
+    });
+    
+    // Quando o usuário edita manualmente o caminho, desativar a geração automática
+    pathInput.addEventListener('input', () => {
+      pathInput.dataset.autoGenerated = 'false';
+    });
+    
+    // Botão cancelar
+    cancelBtn.addEventListener('click', () => {
+      window.location.href = `/admin/sites/${siteId}/paginas`;
+    });
+    
+    // Validação e envio do formulário
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Validar caminho da URL
+      const path = pathInput.value.trim();
+      const pathRegex = /^[a-z0-9-]+$/;
+      
+      if (!pathRegex.test(path) && path !== 'home') {
+        showValidationError(pathInput, 'O caminho deve conter apenas letras minúsculas, números e hífens');
+        return;
+      }
+      
+      // Desabilitar botão para evitar múltiplos envios
+      const submitBtn = document.getElementById('create-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Criando...';
+      
+      // Coletar dados do formulário
+      const formData = new FormData(form);
+      const pageData = {
+        title: formData.get('title'),
+        path: formData.get('path'),
+        template: formData.get('template'),
+        status: formData.get('status'),
+        type: 'page',
+        siteId: siteId,
+        seo: {
+          description: formData.get('description'),
+          keywords: formData.get('keywords').split(',').map(k => k.trim()).filter(k => k)
+        }
+      };
+      
+      try {
+        // Enviar para a API
+        const response = await fetch('/api/pages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(pageData)
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Falha ao criar página');
+        }
+        
+        const result = await response.json();
+        
+        // Redirecionar para o editor com a nova página
+        window.location.href = `/admin/sites/${siteId}/paginas/${result.id}/editor`;
+      } catch (error) {
+        console.error('Erro:', error);
+        
+        // Reativar botão
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Criar Página';
+        
+        // Mostrar erro
+        showToast(error.message || 'Erro ao criar página', 'error');
+      }
+    });
+    
+    // Função para mostrar erro de validação
+    function showValidationError(inputElement, message) {
+      // Remover erro anterior se existir
+      const existingError = inputElement.parentNode.querySelector('.validation-error');
+      if (existingError) existingError.remove();
+      
+      // Criar e adicionar mensagem de erro
+      const errorElement = document.createElement('div');
+      errorElement.className = 'validation-error';
+      errorElement.textContent = message;
+      
+      // Adicionar após o input ou seu container
+      const container = inputElement.classList.contains('path-input') 
+        ? inputElement.closest('.path-input-container')
+        : inputElement;
+      
+      container.parentNode.insertBefore(errorElement, container.nextSibling);
+      
+      // Destacar o campo com erro
+      inputElement.classList.add('input-error');
+      
+      // Remover o erro quando o usuário começar a digitar novamente
+      inputElement.addEventListener('input', function removeError() {
+        inputElement.classList.remove('input-error');
+        const error = inputElement.parentNode.querySelector('.validation-error');
+        if (error) error.remove();
+        inputElement.removeEventListener('input', removeError);
+      });
+    }
+  });
+  
+  // Função para exibir toast de notificação
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+</script>
+
+<style>
+  .page-form {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .form-section {
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .form-section h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .required {
+    color: var(--error);
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    transition: border-color var(--transition-speed) ease;
+  }
+  
+  .form-input:focus,
+  .form-select:focus,
+  .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  
+  .form-textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  
+  .form-help {
+    margin-top: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  
+  .path-input-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .path-prefix {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-light);
+    border-right: none;
+    border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+    height: 45px;
+    color: var(--text-secondary);
+  }
+  
+  .path-input {
+    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .btn-primary {
+    background-color: var(--primary);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .btn-primary:disabled {
+    background-color: var(--primary-light);
+    cursor: not-allowed;
+  }
+  
+  .btn-secondary {
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--border-light);
+  }
+  
+  .validation-error {
+    color: var(--error);
+    font-size: 0.75rem;
+    margin-top: 0.375rem;
+  }
+  
+  .input-error {
+    border-color: var(--error) !important;
+  }
+  
+  /* Toast de notificação */
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideInRight 0.3s ease, fadeOut 0.3s ease 3s forwards;
+    z-index: 1050;
+  }
+  
+  .toast.success {
+    border-left: 4px solid #10b981;
+  }
+  
+  .toast.error {
+    border-left: 4px solid #ef4444;
+  }
+  
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .form-actions {
+      flex-direction: column-reverse;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+    }
+  }
+</style>

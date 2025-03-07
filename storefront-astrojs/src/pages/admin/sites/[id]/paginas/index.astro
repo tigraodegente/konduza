@@ -1,0 +1,491 @@
+---
+// src/pages/admin/sites/[id]/paginas/index.astro
+import AdminLayout from '../../../../../layouts/AdminLayout.astro';
+import { getPagesForSite } from '../../../../../utils/api';
+
+const { id: siteId } = Astro.params;
+
+// Buscar páginas do site
+const pages = await getPagesForSite(siteId);
+
+// Obter templates únicos para o filtro
+const uniqueTemplates = [...new Set(pages.map(page => page.templateName))];
+
+// Função para formatar data
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
+// Função para obter a cor do status
+function getStatusColor(status) {
+  switch (status) {
+    case 'published':
+      return 'status-success';
+    case 'draft':
+      return 'status-warning';
+    case 'archived':
+      return 'status-danger';
+    default:
+      return '';
+  }
+}
+
+// Função para traduzir o status
+function translateStatus(status) {
+  switch (status) {
+    case 'published':
+      return 'Publicado';
+    case 'draft':
+      return 'Rascunho';
+    case 'archived':
+      return 'Arquivado';
+    default:
+      return status;
+  }
+}
+---
+
+<AdminLayout title="Páginas do Site" currentSection="sites">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Gerenciar Páginas</h1>
+      <nav class="breadcrumbs">
+        <a href="/admin">Admin</a> / <a href="/admin/sites">Sites</a> / <a href={`/admin/sites/${siteId}`}>Site</a> / Páginas
+      </nav>
+    </div>
+    <div class="page-actions">
+      <a href={`/admin/sites/${siteId}/paginas/criar`} class="btn-primary">Nova Página</a>
+    </div>
+  </div>
+  
+  <div class="content-container">
+    <!-- Filtros e Busca -->
+    <div class="filters">
+      <div class="search-box">
+        <input type="text" placeholder="Buscar páginas..." class="form-input search-input" id="page-search">
+        <button class="search-button">🔍</button>
+      </div>
+      
+      <div class="filter-group">
+        <label for="status-filter" class="filter-label">Status:</label>
+        <select id="status-filter" class="form-select">
+          <option value="">Todos</option>
+          <option value="published">Publicado</option>
+          <option value="draft">Rascunho</option>
+          <option value="archived">Arquivado</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="template-filter" class="filter-label">Template:</label>
+        <select id="template-filter" class="form-select">
+          <option value="">Todos</option>
+          {uniqueTemplates.map(template => (
+            <option value={template}>{template}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+    
+    <!-- Tabela de Páginas -->
+    <div class="table-container">
+      {pages.length > 0 ? (
+        <table class="pages-table">
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Caminho</th>
+              <th>Template</th>
+              <th>Status</th>
+              <th>Última Atualização</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pages.map(page => (
+              <tr data-status={page.status} data-template={page.templateName}>
+                <td>
+                  <a href={`/admin/sites/${siteId}/paginas/${page.id}/editor`} class="page-title-link">
+                    {page.title}
+                    {page.isHomePage && <span class="home-badge">Home</span>}
+                  </a>
+                </td>
+                <td>/{page.path}</td>
+                <td>{page.templateName}</td>
+                <td>
+                  <span class={`status-badge ${getStatusColor(page.status)}`}>
+                    {translateStatus(page.status)}
+                  </span>
+                </td>
+                <td>{formatDate(page.updatedAt)}</td>
+                <td class="actions-cell">
+                  <a href={`/admin/sites/${siteId}/paginas/${page.id}/editor`} class="btn-icon" title="Editar Conteúdo">
+                    ✏️
+                  </a>
+                  <a href={`/admin/sites/${siteId}/paginas/${page.id}/editar`} class="btn-icon" title="Configurações">
+                    ⚙️
+                  </a>
+                  <a href={`/${page.path}`} target="_blank" rel="noopener noreferrer" class="btn-icon" title="Visualizar Página">
+                    👁️
+                  </a>
+                  <button class="btn-icon" title="Excluir" data-page-id={page.id} data-page-title={page.title}>
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <!-- Mensagem "Sem Resultados" quando não há páginas -->
+        <div class="no-results">
+          <div class="no-results-icon">📄</div>
+          <h3>Nenhuma página encontrada</h3>
+          <p>Este site ainda não possui páginas cadastradas.</p>
+          <a href={`/admin/sites/${siteId}/paginas/criar`} class="btn-primary">Nova Página</a>
+        </div>
+      )}
+    </div>
+    
+    <!-- Mensagem "Sem Resultados" para filtros -->
+    <div class="no-results filter-no-results" style="display: none;">
+      <div class="no-results-icon">🔍</div>
+      <h3>Nenhuma página encontrada</h3>
+      <p>Tente ajustar seus filtros ou criar uma nova página.</p>
+      <a href={`/admin/sites/${siteId}/paginas/criar`} class="btn-primary">Nova Página</a>
+    </div>
+    
+    {pages.length > 0 && (
+      <div class="pagination-info">
+        Exibindo {pages.length} {pages.length === 1 ? 'página' : 'páginas'}
+      </div>
+    )}
+  </div>
+</AdminLayout>
+
+<style>
+  /* Estilos específicos da página de Páginas */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+  }
+  
+  .search-input {
+    padding-right: 2.5rem;
+  }
+  
+  .search-button {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+  
+  .filter-label {
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+  }
+  
+  .pages-table {
+    width: 100%;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .pages-table th {
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 2px solid var(--border-light);
+    font-weight: 600;
+  }
+  
+  .pages-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .page-title-link {
+    font-weight: 500;
+    color: var(--text-dark);
+  }
+  
+  .page-title-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+  }
+  
+  .status-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+  }
+  
+  .status-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+  }
+  
+  .status-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+  }
+  
+  .actions-cell {
+    display: flex;
+    gap: var(--spacing-md);
+  }
+  
+  .actions-cell .btn-icon {
+    font-size: 1.1rem;
+  }
+  
+  /* Mensagem "Sem Resultados" */
+  .no-results {
+    text-align: center;
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .no-results-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+  }
+  
+  .no-results h3 {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .no-results p {
+    color: var(--secondary);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  /* Paginação */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: var(--spacing-lg);
+    gap: var(--spacing-xs);
+  }
+  
+  .pagination-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--border-light);
+    background-color: white;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .pagination-item:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  
+  .pagination-item.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  
+  .pagination-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .pagination-info {
+    margin-left: auto;
+    font-size: var(--font-size-sm);
+    color: var(--secondary);
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .filter-group {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .filter-label {
+      margin-bottom: var(--spacing-xs);
+    }
+    
+    .table-container {
+      overflow-x: auto;
+    }
+    
+    .actions-cell {
+      flex-wrap: wrap;
+    }
+    
+    .pagination {
+      flex-wrap: wrap;
+    }
+  }
+</style>
+
+<script>
+  // Script para funcionalidades interativas da página de páginas
+  document.addEventListener('DOMContentLoaded', () => {
+    // Filtros
+    const statusFilter = document.getElementById('status-filter');
+    const templateFilter = document.getElementById('template-filter');
+    const searchInput = document.getElementById('page-search');
+    const tableRows = document.querySelectorAll('.pages-table tbody tr');
+    const filterNoResults = document.querySelector('.filter-no-results');
+    const table = document.querySelector('.pages-table');
+    
+    // Função para aplicar filtros
+    function applyFilters() {
+      if (!table) return; // Não há tabela (sem páginas)
+      
+      const statusValue = statusFilter.value.toLowerCase();
+      const templateValue = templateFilter.value;
+      const searchValue = searchInput.value.toLowerCase();
+      
+      let visibleCount = 0;
+      
+      tableRows.forEach(row => {
+        const pageTitle = row.querySelector('.page-title-link').textContent.toLowerCase();
+        const pagePath = row.cells[1].textContent.toLowerCase();
+        const pageTemplate = row.dataset.template;
+        const pageStatus = row.dataset.status;
+        
+        const matchesStatus = statusValue === '' || pageStatus === statusValue;
+        const matchesTemplate = templateValue === '' || pageTemplate === templateValue;
+        const matchesSearch = searchValue === '' || pageTitle.includes(searchValue) || pagePath.includes(searchValue);
+        
+        const isVisible = matchesStatus && matchesTemplate && matchesSearch;
+        row.style.display = isVisible ? '' : 'none';
+        
+        if (isVisible) {
+          visibleCount++;
+        }
+      });
+      
+      // Mostrar mensagem "Sem Resultados" se necessário
+      filterNoResults.style.display = visibleCount === 0 ? 'block' : 'none';
+      table.style.display = visibleCount === 0 ? 'none' : 'table';
+      
+      // Atualizar contagem
+      const paginationInfo = document.querySelector('.pagination-info');
+      if (paginationInfo) {
+        paginationInfo.textContent = `Exibindo ${visibleCount} ${visibleCount === 1 ? 'página' : 'páginas'}`;
+      }
+    }
+    
+    // Adicionar event listeners para filtros
+    if (statusFilter && templateFilter && searchInput) {
+      statusFilter.addEventListener('change', applyFilters);
+      templateFilter.addEventListener('change', applyFilters);
+      searchInput.addEventListener('input', applyFilters);
+    }
+    
+    // Funcionalidade para excluir páginas
+    const deleteButtons = document.querySelectorAll('.btn-icon[title="Excluir"]');
+    
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', async () => {
+        const pageId = button.dataset.pageId;
+        const pageTitle = button.dataset.pageTitle;
+        
+        if (confirm(`Tem certeza que deseja excluir a página "${pageTitle}"? Esta ação não pode ser desfeita.`)) {
+          try {
+            // Enviar requisição para a API
+            const response = await fetch(`/api/pages/${pageId}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': window.INTERNAL_API_KEY || '' // Deve ser fornecido pelo servidor
+              }
+            });
+            
+            if (response.ok) {
+              // Mostrar mensagem de sucesso
+              showToast('Página excluída com sucesso', 'success');
+              
+              // Remover linha da tabela
+              button.closest('tr').remove();
+              
+              // Atualizar contagem
+              const remainingRows = document.querySelectorAll('.pages-table tbody tr:not([style*="display: none"])').length;
+              
+              // Atualizar informações de paginação
+              const paginationInfo = document.querySelector('.pagination-info');
+              if (paginationInfo) {
+                paginationInfo.textContent = `Exibindo ${remainingRows} ${remainingRows === 1 ? 'página' : 'páginas'}`;
+              }
+              
+              // Mostrar mensagem "Sem Resultados" se necessário
+              if (remainingRows === 0) {
+                // Recarregar a página para mostrar a mensagem de sem páginas
+                window.location.reload();
+              }
+            } else {
+              throw new Error('Falha ao excluir página');
+            }
+          } catch (error) {
+            console.error('Erro:', error);
+            showToast('Erro ao excluir página', 'error');
+          }
+        }
+      });
+    });
+  });
+  
+  // Função para exibir toast de notificação
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+</script>

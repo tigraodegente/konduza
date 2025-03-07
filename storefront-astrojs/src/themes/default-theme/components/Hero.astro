@@ -1,0 +1,219 @@
+---
+/**
+ * Componente Hero para banners principais
+ * 
+ * Este componente pode ser usado na página inicial ou
+ * em qualquer outra página que precise de um banner principal.
+ */
+
+// Props do componente
+const {
+  title = 'Título Principal',
+  subtitle = 'Uma breve descrição ou slogan para apresentar seu site',
+  imageUrl = '/placeholder-hero.jpg',
+  buttonText = 'Saiba Mais',
+  buttonUrl = '/sobre',
+  buttonSecondaryText = 'Contato',
+  buttonSecondaryUrl = '/contato',
+  align = 'left', // left, center, right
+  background = 'default', // default, alt, primary, secondary, accent
+  fullHeight = false,
+  overlay = false
+} = Astro.props;
+
+// Classes condicionais
+const containerClass = `hero ${background === 'default' ? '' : `hero-${background}`} ${fullHeight ? 'hero-full' : ''} ${overlay ? 'hero-overlay' : ''}`;
+const alignClass = `hero-content-${align}`;
+---
+
+<section class={containerClass}>
+  <div class="container">
+    <div class={`hero-content ${alignClass}`}>
+      <div class="hero-text">
+        <h1>{title}</h1>
+        <p class="subtitle">{subtitle}</p>
+        <div class="hero-buttons">
+          {buttonText && (
+            <a href={buttonUrl} class="btn btn-primary">{buttonText}</a>
+          )}
+          {buttonSecondaryText && (
+            <a href={buttonSecondaryUrl} class="btn btn-secondary">{buttonSecondaryText}</a>
+          )}
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src={imageUrl} alt={title} />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Estilos base */
+  .hero {
+    padding: var(--spacing-xl) 0;
+    background-color: var(--color-background-alt);
+    position: relative;
+  }
+  
+  /* Variantes de background */
+  .hero-alt {
+    background-color: var(--color-background-alt);
+  }
+  
+  .hero-primary {
+    background-color: var(--color-primary);
+    color: white;
+  }
+  
+  .hero-primary h1,
+  .hero-primary .subtitle {
+    color: white;
+  }
+  
+  .hero-secondary {
+    background-color: var(--color-secondary);
+    color: white;
+  }
+  
+  .hero-secondary h1,
+  .hero-secondary .subtitle {
+    color: white;
+  }
+  
+  .hero-accent {
+    background-color: var(--color-accent);
+    color: white;
+  }
+  
+  .hero-accent h1,
+  .hero-accent .subtitle {
+    color: white;
+  }
+  
+  /* Hero com altura completa */
+  .hero-full {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Hero com overlay */
+  .hero-overlay {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: white;
+  }
+  
+  .hero-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+  }
+  
+  .hero-overlay .container {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero-overlay h1,
+  .hero-overlay .subtitle {
+    color: white;
+  }
+  
+  /* Conteúdo */
+  .hero-content {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: center;
+  }
+  
+  /* Alinhamentos */
+  .hero-content-left {
+    flex-direction: row;
+    text-align: left;
+  }
+  
+  .hero-content-center {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .hero-content-center .hero-text,
+  .hero-content-center .hero-image {
+    width: 100%;
+  }
+  
+  .hero-content-center .hero-buttons {
+    justify-content: center;
+  }
+  
+  .hero-content-right {
+    flex-direction: row-reverse;
+    text-align: right;
+  }
+  
+  .hero-content-right .hero-buttons {
+    justify-content: flex-end;
+  }
+  
+  /* Elementos internos */
+  .hero-text {
+    flex: 1;
+    z-index: 2;
+  }
+  
+  .hero-text h1 {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+  }
+  
+  .subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-light);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .hero-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+  }
+  
+  .hero-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    z-index: 2;
+  }
+  
+  .hero-image img {
+    max-width: 100%;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+  }
+  
+  /* Responsivo */
+  @media (max-width: 768px) {
+    .hero-content-left,
+    .hero-content-right {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .hero-buttons {
+      justify-content: center;
+    }
+    
+    .hero-image {
+      margin-top: var(--spacing-lg);
+    }
+  }
+</style>

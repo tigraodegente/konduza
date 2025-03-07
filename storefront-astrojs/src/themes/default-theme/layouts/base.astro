@@ -1,0 +1,307 @@
+---
+/**
+ * Layout base para todas as páginas
+ * 
+ * Este layout inclui os elementos comuns a todas as páginas:
+ * cabeçalho, navegação, rodapé e meta tags.
+ */
+
+// Propriedades do site
+const { site, page } = Astro.props;
+const siteTitle = site?.name || 'Konduza Site';
+const siteDescription = site?.description || 'Site construído com Konduza';
+const themeSettings = site?.themeData?.settings || {};
+
+// Propriedades da página
+const pageTitle = page?.title || 'Página Inicial';
+const pageDescription = page?.description || siteDescription;
+const metaTitle = `${pageTitle} | ${siteTitle}`;
+
+// Configurações de cores e fontes do tema
+const colors = themeSettings.colors || [];
+const fonts = themeSettings.fonts || [];
+
+// Função para obter valor de uma configuração do tema
+function getThemeSetting(collection, key, defaultValue) {
+  const item = collection.find(item => item.key === key);
+  return item ? item.value : defaultValue;
+}
+
+// Obter valores das cores
+const primaryColor = getThemeSetting(colors, 'primary', '#7752FE');
+const secondaryColor = getThemeSetting(colors, 'secondary', '#2EC4B6');
+const accentColor = getThemeSetting(colors, 'accent', '#FF9F1C');
+
+// Obter fontes
+const headingFont = getThemeSetting(fonts, 'heading', 'Montserrat, sans-serif');
+const bodyFont = getThemeSetting(fonts, 'body', 'Roboto, sans-serif');
+
+// Links de navegação
+const navLinks = [
+  { title: 'Início', url: '/' },
+  { title: 'Sobre', url: '/sobre' },
+  { title: 'Serviços', url: '/servicos' },
+  { title: 'Blog', url: '/blog' },
+  { title: 'Contato', url: '/contato' }
+];
+
+// URL do favicon e imagens
+const favicon = site?.settings?.favicon?.url || '/favicon.ico';
+const logo = site?.settings?.logo?.url || null;
+---
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{metaTitle}</title>
+  <meta name="description" content={pageDescription}>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href={favicon}>
+  
+  <!-- Fontes do Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Meta tags para redes sociais -->
+  <meta property="og:title" content={metaTitle}>
+  <meta property="og:description" content={pageDescription}>
+  <meta property="og:type" content="website">
+  <meta property="og:url" content={Astro.url}>
+  <meta property="og:image" content={site?.settings?.defaultOgImage?.url || ''}>
+  <meta property="og:site_name" content={siteTitle}>
+  <meta name="twitter:card" content="summary_large_image">
+  
+  <!-- Estilos do tema -->
+  <link rel="stylesheet" href="/themes/default-theme/main.css">
+  
+  <!-- Estilos específicos da página -->
+  {page?.customStyles && <style set:html={page.customStyles}></style>}
+  
+  <!-- Estilos inline para cores do tema -->
+  <style define:vars={{ 
+    primaryColor, 
+    secondaryColor, 
+    accentColor,
+    headingFont,
+    bodyFont
+  }}>
+    :root {
+      --color-primary: var(--primaryColor);
+      --color-secondary: var(--secondaryColor);
+      --color-accent: var(--accentColor);
+      --font-heading: var(--headingFont);
+      --font-body: var(--bodyFont);
+    }
+  </style>
+</head>
+<body>
+  <!-- Cabeçalho -->
+  <header class="navbar">
+    <div class="container">
+      <div class="navbar-content">
+        <div class="logo">
+          {logo ? (
+            <a href="/">
+              <img src={logo} alt={siteTitle} height="40">
+            </a>
+          ) : (
+            <a href="/" class="site-title">{siteTitle}</a>
+          )}
+        </div>
+        
+        <nav class="nav-menu">
+          <ul>
+            {navLinks.map(link => (
+              <li>
+                <a href={link.url} class={Astro.url.pathname === link.url ? 'active' : ''}>
+                  {link.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main>
+    <slot />
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <h3>{siteTitle}</h3>
+          <p>{siteDescription}</p>
+        </div>
+        <div class="col">
+          <h4>Links</h4>
+          <ul>
+            {navLinks.map(link => (
+              <li><a href={link.url}>{link.title}</a></li>
+            ))}
+          </ul>
+        </div>
+        <div class="col">
+          <h4>Contato</h4>
+          <p>Email: contato@exemplo.com</p>
+          <p>Telefone: (11) 1234-5678</p>
+          
+          <!-- Redes sociais -->
+          <div class="social-links">
+            {site?.settings?.social?.facebook && (
+              <a href={site.settings.social.facebook} target="_blank" rel="noopener">
+                <i class="fab fa-facebook"></i>
+              </a>
+            )}
+            {site?.settings?.social?.instagram && (
+              <a href={site.settings.social.instagram} target="_blank" rel="noopener">
+                <i class="fab fa-instagram"></i>
+              </a>
+            )}
+            {site?.settings?.social?.twitter && (
+              <a href={site.settings.social.twitter} target="_blank" rel="noopener">
+                <i class="fab fa-twitter"></i>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <div class="copyright">
+        <p>&copy; {new Date().getFullYear()} {siteTitle}. Todos os direitos reservados.</p>
+        <p class="powered-by">Desenvolvido com <a href="https://konduza.com" target="_blank">Konduza</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts do tema -->
+  <script src="/themes/default-theme/scripts.js" defer></script>
+  
+  <!-- Scripts específicos da página -->
+  {page?.customScripts && <script set:html={page.customScripts}></script>}
+  
+  <!-- Analytics (se habilitado) -->
+  {site?.settings?.analytics?.googleAnalyticsId && (
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${site.settings.analytics.googleAnalyticsId}`}></script>
+    <script define:vars={{ gaId: site.settings.analytics.googleAnalyticsId }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', gaId);
+    </script>
+  )}
+</body>
+</html>
+
+<style>
+  /* Estilos específicos do layout */
+  .navbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .site-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--color-primary);
+  }
+  
+  .nav-menu ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .nav-menu li {
+    margin-left: var(--spacing-md);
+  }
+  
+  .nav-menu a {
+    color: var(--color-text);
+    font-weight: 500;
+    text-decoration: none;
+    padding: 0.5rem;
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-fast);
+  }
+  
+  .nav-menu a:hover, .nav-menu a.active {
+    color: var(--color-primary);
+    background-color: rgba(119, 82, 254, 0.1);
+  }
+  
+  .footer h3, .footer h4 {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .footer ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .footer li {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .social-links {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+  }
+  
+  .social-links a {
+    display: inline-block;
+    color: var(--color-text);
+    font-size: 1.5rem;
+    transition: color var(--transition-fast);
+  }
+  
+  .social-links a:hover {
+    color: var(--color-primary);
+  }
+  
+  .copyright {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+  }
+  
+  .powered-by {
+    font-size: 0.75rem;
+  }
+  
+  @media (max-width: 768px) {
+    .navbar-content {
+      flex-direction: column;
+      padding: var(--spacing-sm) 0;
+    }
+    
+    .nav-menu {
+      margin-top: var(--spacing-sm);
+    }
+    
+    .nav-menu ul {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .nav-menu li {
+      margin: var(--spacing-xs);
+    }
+  }
+</style>

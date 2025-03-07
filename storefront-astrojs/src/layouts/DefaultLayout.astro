@@ -1,0 +1,166 @@
+---
+/**
+ * Layout padrão para situações de fallback
+ * 
+ * Este layout é usado quando o layout normal
+ * do tema não pode ser carregado
+ */
+
+// Propriedades do layout
+const { site, page } = Astro.props;
+
+// Preparar metadados da página
+const siteTitle = site?.name || 'Konduza Site';
+const pageTitle = page?.title || 'Página';
+const pageDescription = page?.description || site?.description || 'Conteúdo do site';
+const metaTitle = `${pageTitle} | ${siteTitle}`;
+---
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{metaTitle}</title>
+  <meta name="description" content={pageDescription}>
+  
+  <!-- Favicon (fallback) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <!-- Meta tags redes sociais -->
+  <meta property="og:title" content={metaTitle}>
+  <meta property="og:description" content={pageDescription}>
+  <meta property="og:type" content="website">
+  
+  <!-- Estilos básicos inline -->
+  <style>
+    :root {
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --color-primary: #7752FE;
+      --color-text: #333;
+      --color-background: #fff;
+      --color-muted: #777;
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 2rem;
+      --spacing-xl: 4rem;
+      --border-radius: 0.25rem;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-text);
+      background-color: var(--color-background);
+      line-height: 1.5;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--spacing-md);
+    }
+    
+    header, footer {
+      padding: var(--spacing-md) 0;
+      background-color: var(--color-background);
+      border-bottom: 1px solid #eee;
+    }
+    
+    header .container, footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    main {
+      min-height: calc(100vh - 140px);
+      padding: var(--spacing-xl) 0;
+    }
+    
+    footer {
+      margin-top: auto;
+      border-top: 1px solid #eee;
+      border-bottom: none;
+      text-align: center;
+      color: var(--color-muted);
+      font-size: 0.875rem;
+    }
+    
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    
+    a:hover {
+      text-decoration: underline;
+    }
+    
+    h1, h2, h3, h4 {
+      margin-bottom: var(--spacing-md);
+    }
+    
+    p {
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background-color: var(--color-primary);
+      color: white;
+      border-radius: var(--border-radius);
+      text-decoration: none;
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+      text-decoration: none;
+    }
+    
+    .site-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: var(--color-primary);
+    }
+    
+    .error-component {
+      padding: var(--spacing-md);
+      border: 1px dashed #ff6b6b;
+      background-color: #fff5f5;
+      border-radius: var(--border-radius);
+      margin-bottom: var(--spacing-md);
+      color: #e03131;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="/" class="site-title">{siteTitle}</a>
+      <nav>
+        <a href="/">Início</a>
+      </nav>
+    </div>
+  </header>
+  
+  <main>
+    <div class="container">
+      <slot />
+    </div>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <p>&copy; {new Date().getFullYear()} {siteTitle}. Todos os direitos reservados.</p>
+      <p>Desenvolvido com <a href="https://konduza.com" target="_blank">Konduza</a></p>
+    </div>
+  </footer>
+</body>
+</html>

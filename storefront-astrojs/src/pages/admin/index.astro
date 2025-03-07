@@ -1,0 +1,405 @@
+---
+// src/pages/admin/index.astro
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getAdminSession } from '../../utils/api.js';
+
+// Verificar autenticação do admin
+const session = await getAdminSession(Astro.request);
+if (!session) {
+  return Astro.redirect('/login?redirect=/admin');
+}
+
+// Aqui você buscaria dados da API para o dashboard
+// Por exemplo:
+const stats = {
+  sites: 5,
+  pages: 42,
+  media: 128,
+  users: 15
+};
+
+const recentActivity = [
+  { 
+    id: 1, 
+    type: 'site', 
+    action: 'create', 
+    title: 'Novo Site Comercial', 
+    user: 'Ana Silva', 
+    date: new Date(Date.now() - 1000 * 60 * 30).toISOString() 
+  },
+  { 
+    id: 2, 
+    type: 'page', 
+    action: 'update', 
+    title: 'Página de Contato', 
+    user: 'Carlos Oliveira', 
+    date: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() 
+  },
+  { 
+    id: 3, 
+    type: 'theme', 
+    action: 'update', 
+    title: 'Tema Business Pro', 
+    user: 'Mariana Costa', 
+    date: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() 
+  },
+  { 
+    id: 4, 
+    type: 'media', 
+    action: 'upload', 
+    title: '5 novas imagens', 
+    user: 'Roberto Santos', 
+    date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() 
+  },
+];
+
+// Função para formatar data relativa
+function formatRelativeDate(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+  
+  if (diffDay > 0) {
+    return `${diffDay} dia${diffDay > 1 ? 's' : ''} atrás`;
+  } else if (diffHour > 0) {
+    return `${diffHour} hora${diffHour > 1 ? 's' : ''} atrás`;
+  } else if (diffMin > 0) {
+    return `${diffMin} minuto${diffMin > 1 ? 's' : ''} atrás`;
+  } else {
+    return 'Agora mesmo';
+  }
+}
+
+// Obter o ícone para cada tipo de atividade
+function getActivityIcon(type, action) {
+  switch (type) {
+    case 'site':
+      return '🌐';
+    case 'page':
+      return '📄';
+    case 'theme':
+      return '🎨';
+    case 'media':
+      return '🖼️';
+    case 'user':
+      return '👤';
+    default:
+      return '📋';
+  }
+}
+
+// Obter a classe para cada tipo de ação
+function getActionClass(action) {
+  switch (action) {
+    case 'create':
+      return 'action-create';
+    case 'update':
+      return 'action-update';
+    case 'delete':
+      return 'action-delete';
+    case 'upload':
+      return 'action-upload';
+    default:
+      return '';
+  }
+}
+---
+
+<AdminLayout title="Dashboard" currentSection="dashboard" userData={session}>
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Dashboard</h1>
+      <p>Bem-vindo ao painel administrativo do Konduza.</p>
+    </div>
+    <div class="page-actions">
+      <a href="/admin/sites/criar" class="btn-primary">Novo Site</a>
+      <button class="btn-secondary">Ver Relatórios</button>
+    </div>
+  </div>
+  
+  <!-- Estatísticas -->
+  <div class="stats-grid grid-container">
+    <div class="card stat-card">
+      <div class="stat-icon">🌐</div>
+      <div class="stat-content">
+        <div class="stat-value">{stats.sites}</div>
+        <div class="stat-label">Sites</div>
+      </div>
+    </div>
+    
+    <div class="card stat-card">
+      <div class="stat-icon">📄</div>
+      <div class="stat-content">
+        <div class="stat-value">{stats.pages}</div>
+        <div class="stat-label">Páginas</div>
+      </div>
+    </div>
+    
+    <div class="card stat-card">
+      <div class="stat-icon">🖼️</div>
+      <div class="stat-content">
+        <div class="stat-value">{stats.media}</div>
+        <div class="stat-label">Arquivos de Mídia</div>
+      </div>
+    </div>
+    
+    <div class="card stat-card">
+      <div class="stat-icon">👤</div>
+      <div class="stat-content">
+        <div class="stat-value">{stats.users}</div>
+        <div class="stat-label">Usuários</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Conteúdo Principal -->
+  <div class="dashboard-content">
+    <div class="row">
+      <div class="col">
+        <!-- Atividade Recente -->
+        <div class="card">
+          <h2 class="card-title">Atividade Recente</h2>
+          <div class="activity-list">
+            {recentActivity.map(activity => (
+              <div class="activity-item">
+                <div class="activity-icon">
+                  {getActivityIcon(activity.type, activity.action)}
+                </div>
+                <div class="activity-content">
+                  <div class="activity-title">
+                    <span class={getActionClass(activity.action)}>
+                      {activity.action === 'create' && 'Criou'}
+                      {activity.action === 'update' && 'Atualizou'}
+                      {activity.action === 'delete' && 'Removeu'}
+                      {activity.action === 'upload' && 'Carregou'}
+                    </span> 
+                    {activity.title}
+                  </div>
+                  <div class="activity-meta">
+                    {activity.user} • {formatRelativeDate(activity.date)}
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div class="activity-more">
+              <a href="/admin/activity">Ver todas as atividades →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col">
+        <!-- Ações Rápidas -->
+        <div class="card">
+          <h2 class="card-title">Ações Rápidas</h2>
+          <div class="quick-actions">
+            <a href="/admin/sites/criar" class="quick-action">
+              <span class="quick-action-icon">🌐</span>
+              <span class="quick-action-text">Criar Site</span>
+            </a>
+            
+            <a href="/admin/themes" class="quick-action">
+              <span class="quick-action-icon">🎨</span>
+              <span class="quick-action-text">Gerenciar Temas</span>
+            </a>
+            
+            <a href="/admin/media/upload" class="quick-action">
+              <span class="quick-action-icon">🖼️</span>
+              <span class="quick-action-text">Upload de Mídia</span>
+            </a>
+            
+            <a href="/admin/users/criar" class="quick-action">
+              <span class="quick-action-icon">👤</span>
+              <span class="quick-action-text">Adicionar Usuário</span>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Dicas e Recursos -->
+        <div class="card">
+          <h2 class="card-title">Dicas e Recursos</h2>
+          <ul class="resources-list">
+            <li>
+              <a href="/docs/getting-started" class="resource-link">
+                <span class="resource-icon">📚</span>
+                <span class="resource-text">Guia de Introdução ao Konduza</span>
+              </a>
+            </li>
+            <li>
+              <a href="/docs/theme-creation" class="resource-link">
+                <span class="resource-icon">🎨</span>
+                <span class="resource-text">Como criar temas personalizados</span>
+              </a>
+            </li>
+            <li>
+              <a href="/docs/component-library" class="resource-link">
+                <span class="resource-icon">🧩</span>
+                <span class="resource-text">Biblioteca de Componentes</span>
+              </a>
+            </li>
+            <li>
+              <a href="/docs/seo-optimization" class="resource-link">
+                <span class="resource-icon">🔍</span>
+                <span class="resource-text">Otimização de SEO para seus sites</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  /* Estilos específicos do Dashboard */
+  .stats-grid {
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .stat-card {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+  }
+  
+  .stat-icon {
+    font-size: 2rem;
+    margin-right: var(--spacing-md);
+    opacity: 0.8;
+  }
+  
+  .stat-value {
+    font-size: 1.75rem;
+    font-weight: bold;
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .stat-label {
+    color: var(--secondary);
+    font-size: var(--font-size-sm);
+  }
+  
+  .dashboard-content .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+  }
+  
+  .activity-list {
+    margin-top: var(--spacing-md);
+  }
+  
+  .activity-item {
+    display: flex;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .activity-item:last-child {
+    border-bottom: none;
+  }
+  
+  .activity-icon {
+    margin-right: var(--spacing-md);
+    font-size: 1.25rem;
+  }
+  
+  .activity-title {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .activity-meta {
+    font-size: var(--font-size-sm);
+    color: var(--secondary);
+  }
+  
+  .activity-more {
+    margin-top: var(--spacing-md);
+    text-align: right;
+  }
+  
+  .action-create {
+    color: var(--success);
+  }
+  
+  .action-update {
+    color: var(--info);
+  }
+  
+  .action-delete {
+    color: var(--danger);
+  }
+  
+  .action-upload {
+    color: var(--primary);
+  }
+  
+  .quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+  }
+  
+  .quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-light);
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .quick-action:hover {
+    border-color: var(--primary);
+    background-color: rgba(79, 70, 229, 0.05);
+    transform: translateY(-2px);
+  }
+  
+  .quick-action-icon {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .resources-list {
+    margin-top: var(--spacing-md);
+  }
+  
+  .resources-list li {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .resource-link {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    transition: background-color var(--transition-speed) ease;
+  }
+  
+  .resource-link:hover {
+    background-color: var(--bg-light);
+  }
+  
+  .resource-icon {
+    margin-right: var(--spacing-sm);
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .dashboard-content .row {
+      grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

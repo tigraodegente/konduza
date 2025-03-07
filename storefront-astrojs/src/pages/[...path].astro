@@ -1,0 +1,113 @@
+---
+/**
+ * Rota dinâmica para renderizar páginas
+ * 
+ * Esta rota captura todas as URLs e renderiza o conteúdo
+ * correspondente ao site e página solicitados.
+ */
+
+import { getCurrentSite, getPage } from '../utils/api';
+import { resolveLayout, renderPage } from '../lib/renderEngine';
+
+// Garantir que o layout padrão está disponível mesmo que falhe 
+// a importação do layout específico
+let DefaultLayout;
+try {
+  DefaultLayout = (await import('../layouts/DefaultLayout.astro')).default;
+} catch (e) {
+  // Criar um layout padrão mínimo caso mesmo o fallback falhe
+  DefaultLayout = {
+    render(props) {
+      return `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${props.page?.title || 'Página'}</title>
+        </head>
+        <body>
+          <main>${props.children}</main>
+        </body>
+        </html>
+      `;
+    }
+  };
+}
+
+// Obter o caminho da URL
+const { path } = Astro.params;
+const normalizedPath = path || 'home';
+
+// Obter dados do site com base no domínio
+const domain = Astro.request.headers.get('host') || 'localhost';
+console.log(`[DynamicRoute] Requisição para domínio: ${domain}, caminho: ${normalizedPath}`);
+
+// Buscar dados do site e página
+// Primeiro tentar site do middleware, depois da API
+const site = Astro.locals.site || await getCurrentSite(domain);
+console.log(`[DynamicRoute] Site encontrado: ${site?.name || 'não encontrado'}`);
+
+// Se não encontrar o site, retornar 404
+if (!site) {
+  return Astro.redirect('/404');
+}
+
+// Buscar dados da página
+const page = await getPage(site.id, normalizedPath);
+console.log(`[DynamicRoute] Página encontrada: ${page?.title || 'não encontrada'}`);
+
+// Se não encontrar a página, retornar 404
+if (!page && normalizedPath !== '404') {
+  return Astro.redirect('/404');
+}
+
+// Dados para página 404 padrão se necessário
+const notFoundPage = page || {
+  title: 'Página não encontrada',
+  description: 'A página que você está procurando não existe ou foi movida.',
+  layout: 'base',
+  components: [
+    {
+      type: 'error-page',
+      props: {
+        title: 'Página não encontrada',
+        message: 'A página que você está procurando não existe ou foi movida.',
+        buttonText: 'Voltar para a página inicial',
+        buttonUrl: '/'
+      }
+    }
+  ]
+};
+
+// Resolver o layout para a página
+let Layout;
+try {
+  Layout = await resolveLayout(notFoundPage, site);
+  console.log(`[DynamicRoute] Layout resolvido: ${Layout ? 'OK' : 'Não encontrado'}`);
+} catch (error) {
+  console.error(`[DynamicRoute] Erro ao resolver layout: ${error.message}`);
+  Layout = DefaultLayout;
+}
+
+// Renderizar componentes da página
+let renderedComponents = [];
+try {
+  renderedComponents = await renderPage(notFoundPage, site);
+  console.log(`[DynamicRoute] ${renderedComponents.length} componentes renderizados`);
+} catch (error) {
+  console.error(`[DynamicRoute] Erro ao renderizar página: ${error.message}`);
+}
+
+// Metadata da página
+const pageTitle = notFoundPage.title;
+const pageDescription = notFoundPage.description || site.description || '';
+---
+
+<Layout site={site} page={notFoundPage}>
+  {renderedComponents.map(({ Component, props, children }) => (
+    <Component {...props}>
+      {children}
+    </Component>
+  ))}
+</Layout>

@@ -1,0 +1,289 @@
+---
+/**
+ * Layout para a página inicial
+ * 
+ * Este layout estende o layout base e adiciona seções específicas
+ * para a página inicial: banner principal, blocos de destaque,
+ * e seções de conteúdo.
+ */
+
+import BaseLayout from './base.astro';
+
+// Propriedades do site e página
+const { site, page, content } = Astro.props;
+
+// Preparar dados da página
+const heroTitle = page?.heroTitle || 'Bem-vindo ao site';
+const heroSubtitle = page?.heroSubtitle || 'Criado com a plataforma Konduza';
+const heroImage = page?.heroImage?.url || '/placeholder-hero.jpg';
+const heroButtonText = page?.heroButtonText || 'Saiba Mais';
+const heroButtonUrl = page?.heroButtonUrl || '/sobre';
+
+// Destaques
+const highlights = page?.highlights || [
+  {
+    title: 'Fácil de Usar',
+    description: 'Interface intuitiva para criar sites sem precisar de código.',
+    icon: 'magic',
+  },
+  {
+    title: 'Responsivo',
+    description: 'Todos os temas são otimizados para visualização em qualquer dispositivo.',
+    icon: 'mobile',
+  },
+  {
+    title: 'Personalizável',
+    description: 'Adapte cores, fontes e layouts para refletir sua marca.',
+    icon: 'palette',
+  }
+];
+
+// Seções de conteúdo
+const sections = page?.sections || [];
+---
+
+<BaseLayout site={site} page={page}>
+  <!-- Hero Banner -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1>{heroTitle}</h1>
+          <p class="subtitle">{heroSubtitle}</p>
+          <div class="hero-buttons">
+            <a href={heroButtonUrl} class="btn btn-primary">{heroButtonText}</a>
+            <a href="/contato" class="btn btn-secondary">Entre em contato</a>
+          </div>
+        </div>
+        <div class="hero-image">
+          <img src={heroImage} alt={heroTitle} />
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Destaques -->
+  <section class="highlights">
+    <div class="container">
+      <h2 class="section-title">Nossos Diferenciais</h2>
+      <div class="highlights-grid">
+        {highlights.map((item) => (
+          <div class="highlight-card">
+            <div class="highlight-icon">
+              <i class={`fas fa-${item.icon}`}></i>
+            </div>
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+  
+  <!-- Conteúdo principal -->
+  <section class="main-content">
+    <div class="container">
+      <div class="content-wrapper">
+        <slot />
+      </div>
+    </div>
+  </section>
+  
+  <!-- Seções de conteúdo dinâmicas -->
+  {sections.map((section, index) => (
+    <section class={`content-section ${section.background || ''}`} id={section.id || `section-${index}`}>
+      <div class="container">
+        {section.title && <h2 class="section-title">{section.title}</h2>}
+        {section.subtitle && <p class="section-subtitle">{section.subtitle}</p>}
+        
+        <div class="section-content" set:html={section.content}></div>
+      </div>
+    </section>
+  ))}
+  
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Pronto para começar seu projeto?</h2>
+        <p>Entre em contato hoje mesmo e vamos conversar sobre suas necessidades.</p>
+        <a href="/contato" class="btn btn-primary">Fale Conosco</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Hero Banner */
+  .hero {
+    background-color: var(--color-background-alt);
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .hero-content {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: center;
+  }
+  
+  .hero-text {
+    flex: 1;
+  }
+  
+  .hero-text h1 {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+  }
+  
+  .subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-light);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .hero-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+  }
+  
+  .hero-image {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .hero-image img {
+    max-width: 100%;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Highlights */
+  .highlights {
+    padding: var(--spacing-xl) 0;
+    background-color: white;
+  }
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    position: relative;
+  }
+  
+  .section-title::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 3px;
+    background-color: var(--color-primary);
+    margin: var(--spacing-sm) auto 0;
+  }
+  
+  .highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+  }
+  
+  .highlight-card {
+    padding: var(--spacing-lg);
+    background-color: var(--color-background);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    text-align: center;
+  }
+  
+  .highlight-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .highlight-icon {
+    font-size: 2.5rem;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .highlight-card h3 {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  /* Main Content */
+  .main-content {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .content-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  /* Content Sections */
+  .content-section {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .content-section:nth-child(even) {
+    background-color: var(--color-background-alt);
+  }
+  
+  .section-subtitle {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-text-light);
+  }
+  
+  /* CTA Section */
+  .cta-section {
+    background-color: var(--color-primary);
+    color: white;
+    padding: var(--spacing-xl) 0;
+    text-align: center;
+  }
+  
+  .cta-content h2 {
+    color: white;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .cta-content p {
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-lg);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .cta-section .btn-primary {
+    background-color: white;
+    color: var(--color-primary);
+  }
+  
+  .cta-section .btn-primary:hover {
+    background-color: var(--color-background-alt);
+  }
+  
+  /* Responsivo */
+  @media (max-width: 768px) {
+    .hero-content {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .hero-image {
+      justify-content: center;
+      margin-top: var(--spacing-lg);
+    }
+    
+    .hero-buttons {
+      justify-content: center;
+    }
+    
+    .highlights-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

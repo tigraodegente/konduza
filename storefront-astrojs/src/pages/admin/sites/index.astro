@@ -1,0 +1,421 @@
+---
+// src/pages/admin/sites/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// Em um ambiente real, você buscaria esses dados da API
+const sites = [
+  {
+    id: '1',
+    name: 'Site Corporativo',
+    domain: 'empresa.com.br',
+    themeId: 'theme-business',
+    themeName: 'Business Pro',
+    status: 'published',
+    lastUpdated: '2025-03-01T10:30:00.000Z'
+  },
+  {
+    id: '2',
+    name: 'Blog de Notícias',
+    domain: 'noticias.com.br',
+    themeId: 'theme-blog',
+    themeName: 'Blog Standard',
+    status: 'published',
+    lastUpdated: '2025-02-28T15:45:00.000Z'
+  },
+  {
+    id: '3',
+    name: 'Loja Virtual',
+    domain: 'minhaloja.com.br',
+    themeId: 'theme-ecommerce',
+    themeName: 'Shop Premium',
+    status: 'draft',
+    lastUpdated: '2025-03-05T08:20:00.000Z'
+  },
+  {
+    id: '4',
+    name: 'Site Pessoal',
+    domain: 'joaosilva.com.br',
+    themeId: 'theme-portfolio',
+    themeName: 'Portfolio Clean',
+    status: 'published',
+    lastUpdated: '2025-02-20T12:15:00.000Z'
+  },
+  {
+    id: '5',
+    name: 'Site de Eventos',
+    domain: 'meuevent.com.br',
+    themeId: 'theme-event',
+    themeName: 'Event Special',
+    status: 'maintenance',
+    lastUpdated: '2025-03-04T09:10:00.000Z'
+  }
+];
+
+// Função para formatar data
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
+// Função para obter a cor do status
+function getStatusColor(status) {
+  switch (status) {
+    case 'published':
+      return 'status-success';
+    case 'draft':
+      return 'status-warning';
+    case 'maintenance':
+      return 'status-info';
+    default:
+      return '';
+  }
+}
+
+// Função para traduzir o status
+function translateStatus(status) {
+  switch (status) {
+    case 'published':
+      return 'Publicado';
+    case 'draft':
+      return 'Rascunho';
+    case 'maintenance':
+      return 'Manutenção';
+    default:
+      return status;
+  }
+}
+---
+
+<AdminLayout title="Gerenciar Sites" currentSection="sites">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Gerenciar Sites</h1>
+      <nav class="breadcrumbs">
+        <a href="/admin">Admin</a> / <a href="/admin/sites">Sites</a>
+      </nav>
+    </div>
+    <div class="page-actions">
+      <a href="/admin/sites/criar" class="btn-primary">Novo Site</a>
+    </div>
+  </div>
+  
+  <div class="content-container">
+    <!-- Filtros e Busca -->
+    <div class="filters">
+      <div class="search-box">
+        <input type="text" placeholder="Buscar sites..." class="form-input search-input" />
+        <button class="search-button">🔍</button>
+      </div>
+      
+      <div class="filter-group">
+        <label for="status-filter" class="filter-label">Status:</label>
+        <select id="status-filter" class="form-select">
+          <option value="">Todos</option>
+          <option value="published">Publicado</option>
+          <option value="draft">Rascunho</option>
+          <option value="maintenance">Manutenção</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="theme-filter" class="filter-label">Tema:</label>
+        <select id="theme-filter" class="form-select">
+          <option value="">Todos</option>
+          <option value="theme-business">Business Pro</option>
+          <option value="theme-blog">Blog Standard</option>
+          <option value="theme-ecommerce">Shop Premium</option>
+          <option value="theme-portfolio">Portfolio Clean</option>
+          <option value="theme-event">Event Special</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Tabela de Sites -->
+    <div class="table-container">
+      <table class="sites-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Domínio</th>
+            <th>Tema</th>
+            <th>Status</th>
+            <th>Última Atualização</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sites.map(site => (
+            <tr>
+              <td>
+                <a href={`/admin/sites/${site.id}`} class="site-name">
+                  {site.name}
+                </a>
+              </td>
+              <td>{site.domain}</td>
+              <td>{site.themeName}</td>
+              <td>
+                <span class={`status-badge ${getStatusColor(site.status)}`}>
+                  {translateStatus(site.status)}
+                </span>
+              </td>
+              <td>{formatDate(site.lastUpdated)}</td>
+              <td class="actions-cell">
+                <a href={`/admin/sites/${site.id}/editar`} class="btn-icon" title="Editar">
+                  ✏️
+                </a>
+                <a href={`/admin/sites/${site.id}/paginas`} class="btn-icon" title="Gerenciar Páginas">
+                  📄
+                </a>
+                <a href={`https://${site.domain}`} target="_blank" rel="noopener noreferrer" class="btn-icon" title="Visualizar Site">
+                  👁️
+                </a>
+                <button class="btn-icon" title="Excluir" data-site-id={site.id}>
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Paginação -->
+    <div class="pagination">
+      <button class="pagination-item" disabled>
+        &laquo;
+      </button>
+      <button class="pagination-item active">1</button>
+      <button class="pagination-item">2</button>
+      <button class="pagination-item">3</button>
+      <button class="pagination-item">
+        &raquo;
+      </button>
+      <div class="pagination-info">
+        Exibindo 1-5 de 5 sites
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  /* Estilos específicos da página de Sites */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+  }
+  
+  .search-input {
+    padding-right: 2.5rem;
+  }
+  
+  .search-button {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+  
+  .filter-label {
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+  }
+  
+  .sites-table {
+    width: 100%;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .sites-table th {
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 2px solid var(--border-light);
+    font-weight: 600;
+  }
+  
+  .sites-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .site-name {
+    font-weight: 500;
+    color: var(--text-dark);
+  }
+  
+  .site-name:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+  }
+  
+  .status-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+  }
+  
+  .status-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+  }
+  
+  .status-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+  }
+  
+  .actions-cell {
+    display: flex;
+    gap: var(--spacing-md);
+  }
+  
+  .actions-cell .btn-icon {
+    font-size: 1.1rem;
+  }
+  
+  /* Paginação */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: var(--spacing-lg);
+    gap: var(--spacing-xs);
+  }
+  
+  .pagination-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--border-light);
+    background-color: white;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .pagination-item:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  
+  .pagination-item.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  
+  .pagination-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .pagination-info {
+    margin-left: auto;
+    font-size: var(--font-size-sm);
+    color: var(--secondary);
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+    }
+    
+    .actions-cell {
+      flex-wrap: wrap;
+    }
+    
+    .pagination {
+      flex-wrap: wrap;
+    }
+  }
+</style>
+
+<script>
+  // Script para funcionalidades interativas da página de sites
+  document.addEventListener('DOMContentLoaded', () => {
+    // Implementar filtros
+    const statusFilter = document.getElementById('status-filter');
+    const themeFilter = document.getElementById('theme-filter');
+    const searchInput = document.querySelector('.search-input');
+    const tableRows = document.querySelectorAll('.sites-table tbody tr');
+    
+    function filterTable() {
+      const statusValue = statusFilter.value.toLowerCase();
+      const themeValue = themeFilter.value.toLowerCase();
+      const searchValue = searchInput.value.toLowerCase();
+      
+      tableRows.forEach(row => {
+        const siteName = row.querySelector('.site-name').textContent.toLowerCase();
+        const domain = row.cells[1].textContent.toLowerCase();
+        const theme = row.cells[2].textContent.toLowerCase();
+        const status = row.querySelector('.status-badge').textContent.toLowerCase();
+        
+        const matchesStatus = statusValue === '' || status.includes(statusValue);
+        const matchesTheme = themeValue === '' || theme.toLowerCase().includes(themeValue) || row.querySelector('td:nth-child(3)').dataset.themeId === themeValue;
+        const matchesSearch = searchValue === '' || siteName.includes(searchValue) || domain.includes(searchValue);
+        
+        row.style.display = (matchesStatus && matchesTheme && matchesSearch) ? '' : 'none';
+      });
+    }
+    
+    // Adicionar eventos
+    statusFilter.addEventListener('change', filterTable);
+    themeFilter.addEventListener('change', filterTable);
+    searchInput.addEventListener('input', filterTable);
+    
+    // Implementar confirmação de exclusão
+    const deleteButtons = document.querySelectorAll('.btn-icon[title="Excluir"]');
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const siteId = button.dataset.siteId;
+        const siteName = button.closest('tr').querySelector('.site-name').textContent;
+        
+        if (confirm(`Tem certeza que deseja excluir o site "${siteName}"? Esta ação não pode ser desfeita.`)) {
+          // Aqui você enviaria uma requisição para a API para excluir o site
+          console.log(`Excluindo site ${siteId}: ${siteName}`);
+          // Após excluir, poderia recarregar a tabela ou remover a linha
+          button.closest('tr').remove();
+        }
+      });
+    });
+  });
+</script>

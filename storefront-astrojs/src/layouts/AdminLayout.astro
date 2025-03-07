@@ -1,0 +1,266 @@
+---
+// src/layouts/AdminLayout.astro
+
+interface Props {
+  title: string;
+  currentSection?: string;
+  userData?: {
+    name: string;
+    email: string;
+    roles: string[];
+  };
+}
+
+// As páginas filhas devem passar os dados do usuário como propriedade
+const { title, currentSection = 'dashboard', userData = { name: 'Administrador', email: '', roles: [] } } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title} | Konduza Admin</title>
+  <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <header class="admin-header">
+      <div class="admin-header-left">
+        <a href="/admin" class="admin-logo">
+          <img src="/admin/logo.svg" alt="Konduza" />
+        </a>
+        <nav class="admin-main-nav">
+          <a href="/admin/sites" class={currentSection === 'sites' ? 'active' : ''}>Sites</a>
+          <a href="/admin/themes" class={currentSection === 'themes' ? 'active' : ''}>Temas</a>
+          <a href="/admin/media" class={currentSection === 'media' ? 'active' : ''}>Mídia</a>
+          <a href="/admin/entities" class={currentSection === 'entities' ? 'active' : ''}>Entidades</a>
+          <a href="/admin/users" class={currentSection === 'users' ? 'active' : ''}>Usuários</a>
+          <a href="/admin/settings" class={currentSection === 'settings' ? 'active' : ''}>Configurações</a>
+        </nav>
+      </div>
+      <div class="admin-header-right">
+        <div class="admin-search">
+          <input type="text" placeholder="Buscar..." />
+          <button type="submit">
+            <span class="icon-search">🔍</span>
+          </button>
+        </div>
+        <div class="admin-notifications">
+          <button class="notifications-toggle">
+            <span class="icon-bell">🔔</span>
+            <span class="notification-badge">3</span>
+          </button>
+          <!-- Dropdown de notificações será implementado com JavaScript -->
+        </div>
+        <div class="admin-profile">
+          <button class="profile-toggle">
+            <img src="/admin/avatar.jpg" alt={userData.name} />
+            <span class="hidden md:inline ml-2">{userData.name}</span>
+          </button>
+          <div class="profile-dropdown hidden">
+            <div class="dropdown-header">
+              <strong>{userData.name}</strong>
+              <span>{userData.email}</span>
+              <div class="user-role">{userData.roles.includes('admin') ? 'Administrador' : 'Usuário'}</div>
+            </div>
+            <div class="dropdown-menu">
+              <a href="/admin/profile">Meu Perfil</a>
+              <a href="/admin/settings">Configurações</a>
+              <a href="#" id="logout-button">Sair</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    
+    <div class="admin-content-wrapper">
+      <aside class="admin-sidebar">
+        {currentSection === 'dashboard' && (
+          <div class="sidebar-section">
+            <h3>Dashboard</h3>
+            <ul>
+              <li><a href="/admin" class="active">Visão Geral</a></li>
+              <li><a href="/admin/activity">Atividade Recente</a></li>
+              <li><a href="/admin/analytics">Analytics</a></li>
+            </ul>
+          </div>
+        )}
+        
+        {currentSection === 'sites' && (
+          <div class="sidebar-section">
+            <h3>Sites</h3>
+            <ul>
+              <li><a href="/admin/sites">Todos os Sites</a></li>
+              <li><a href="/admin/sites/criar">Criar Novo Site</a></li>
+              <li><a href="/admin/sites/dominios">Gerenciar Domínios</a></li>
+            </ul>
+          </div>
+        )}
+        
+        {currentSection === 'themes' && (
+          <div class="sidebar-section">
+            <h3>Temas</h3>
+            <ul>
+              <li><a href="/admin/themes">Biblioteca de Temas</a></li>
+              <li><a href="/admin/themes/editor">Editor de Tema</a></li>
+              <li><a href="/admin/themes/componentes">Componentes</a></li>
+              <li><a href="/admin/themes/cores">Cores e Estilos</a></li>
+            </ul>
+          </div>
+        )}
+        
+        {currentSection === 'media' && (
+          <div class="sidebar-section">
+            <h3>Mídia</h3>
+            <ul>
+              <li><a href="/admin/media">Biblioteca de Mídia</a></li>
+              <li><a href="/admin/media/upload">Upload de Arquivos</a></li>
+              <li><a href="/admin/media/pastas">Gerenciar Pastas</a></li>
+            </ul>
+          </div>
+        )}
+        
+        {currentSection === 'entities' && (
+          <div class="sidebar-section">
+            <h3>Entidades</h3>
+            <ul>
+              <li><a href="/admin/entities">Todas as Entidades</a></li>
+              <li><a href="/admin/entities/esquemas">Esquemas</a></li>
+              <li><a href="/admin/entities/dados">Visualizar Dados</a></li>
+            </ul>
+          </div>
+        )}
+        
+        {currentSection === 'users' && (
+          <div class="sidebar-section">
+            <h3>Usuários</h3>
+            <ul>
+              <li><a href="/admin/users">Todos os Usuários</a></li>
+              <li><a href="/admin/users/criar">Adicionar Usuário</a></li>
+              <li><a href="/admin/users/permissoes">Permissões</a></li>
+            </ul>
+          </div>
+        )}
+        
+        {currentSection === 'settings' && (
+          <div class="sidebar-section">
+            <h3>Configurações</h3>
+            <ul>
+              <li><a href="/admin/settings">Configurações Gerais</a></li>
+              <li><a href="/admin/settings/integracao">Integrações</a></li>
+              <li><a href="/admin/settings/seguranca">Segurança</a></li>
+            </ul>
+          </div>
+        )}
+        
+        <div class="sidebar-toggle">
+          <button>
+            <span class="icon-menu-fold">◀</span>
+          </button>
+        </div>
+      </aside>
+      
+      <main class="admin-content">
+        <slot />
+      </main>
+    </div>
+    
+    <footer class="admin-footer">
+      <div class="footer-copyright">
+        &copy; 2025 Konduza. Todos os direitos reservados.
+      </div>
+      <div class="footer-links">
+        <a href="/docs">Documentação</a>
+        <a href="/support">Suporte</a>
+        <a href="/terms">Termos</a>
+      </div>
+      <div class="footer-version">
+        Versão 1.0.0
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Scripts para funcionalidades interativas do admin
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebarToggle = document.querySelector('.sidebar-toggle button');
+      const adminLayout = document.querySelector('.admin-layout');
+      const profileToggle = document.querySelector('.profile-toggle');
+      const profileDropdown = document.querySelector('.profile-dropdown');
+      const logoutButton = document.getElementById('logout-button');
+      
+      // Os dados do usuário já estão disponíveis no HTML através do servidor
+      
+      // Toggle da sidebar
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+          adminLayout.classList.toggle('sidebar-collapsed');
+        });
+      }
+      
+      // Toggle do menu de perfil
+      if (profileToggle && profileDropdown) {
+        profileToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profileDropdown.classList.toggle('hidden');
+        });
+        
+        // Fechar ao clicar fora
+        document.addEventListener('click', () => {
+          profileDropdown.classList.add('hidden');
+        });
+        
+        profileDropdown.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
+      
+      // Logout
+      if (logoutButton) {
+        logoutButton.addEventListener('click', async (e) => {
+          e.preventDefault();
+          
+          try {
+            const API_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000';
+            
+            // Chamar API de logout do Payload CMS
+            const response = await fetch(`${API_URL}/api/users/logout`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            // Mesmo se falhar, vamos limpar o localStorage e redirecionar
+            localStorage.removeItem('konduza_user');
+            
+            // Redirecionar para página de login
+            window.location.href = '/login';
+          } catch (error) {
+            console.error('Erro ao fazer logout:', error);
+            
+            // Em caso de erro, ainda limpar dados locais e redirecionar
+            localStorage.removeItem('konduza_user');
+            window.location.href = '/login';
+          }
+        });
+      }
+      
+      // Responsividade em dispositivos móveis
+      const mobileBreakpoint = 768;
+      
+      function handleResize() {
+        if (window.innerWidth < mobileBreakpoint) {
+          adminLayout.classList.add('sidebar-collapsed');
+        }
+      }
+      
+      // Verificar no carregamento e no resize
+      handleResize();
+      window.addEventListener('resize', handleResize);
+    });
+  </script>
+</body>
+</html>

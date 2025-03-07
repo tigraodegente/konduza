@@ -1,0 +1,101 @@
+{
+  "id": "default-theme",
+  "name": "Tema Padrão Konduza",
+  "version": "1.0.0",
+  "description": "Tema padrão para novos sites no Konduza",
+  "created": "2025-03-06T12:00:00.000Z",
+  "updated": "2025-03-06T12:00:00.000Z",
+  "status": "published",
+  "author": "system",
+  "templates": [
+    {
+      "name": "Página Inicial",
+      "key": "home",
+      "description": "Template para a página inicial do site"
+    },
+    {
+      "name": "Página de Conteúdo",
+      "key": "content",
+      "description": "Template para páginas regulares de conteúdo"
+    },
+    {
+      "name": "Página de Contato",
+      "key": "contact",
+      "description": "Template para página de contato"
+    }
+  ],
+  "settings": {
+    "colors": [
+      {
+        "name": "Primária",
+        "key": "primary",
+        "value": "#7752FE"
+      },
+      {
+        "name": "Secundária",
+        "key": "secondary",
+        "value": "#2EC4B6"
+      },
+      {
+        "name": "Texto",
+        "key": "text",
+        "value": "#212529"
+      },
+      {
+        "name": "Fundo",
+        "key": "background",
+        "value": "#FFFFFF"
+      },
+      {
+        "name": "Destaque",
+        "key": "accent",
+        "value": "#FF9F1C"
+      }
+    ],
+    "fonts": [
+      {
+        "name": "Cabeçalho",
+        "key": "heading",
+        "family": "Montserrat, sans-serif",
+        "url": "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
+      },
+      {
+        "name": "Corpo",
+        "key": "body",
+        "family": "Roboto, sans-serif",
+        "url": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      }
+    ],
+    "spacing": [
+      {
+        "name": "Pequeno",
+        "key": "small",
+        "value": "0.5rem"
+      },
+      {
+        "name": "Médio",
+        "key": "medium",
+        "value": "1rem"
+      },
+      {
+        "name": "Grande",
+        "key": "large",
+        "value": "2rem"
+      }
+    ]
+  },
+  "dependencies": [
+    {
+      "name": "TailwindCSS",
+      "version": "3.0.0",
+      "type": "css",
+      "url": "https://cdn.tailwindcss.com"
+    },
+    {
+      "name": "Font Awesome",
+      "version": "6.0.0",
+      "type": "css",
+      "url": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    }
+  ]
+}

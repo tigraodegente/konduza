@@ -1,0 +1,586 @@
+---
+// src/pages/admin/sites/criar.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// Em um ambiente real, você buscaria esses dados da API
+const availableThemes = [
+  {
+    id: 'theme-business',
+    name: 'Business Pro',
+    description: 'Um tema profissional para sites corporativos',
+    thumbnail: '/admin/thumbnails/theme-business.jpg',
+    category: 'business'
+  },
+  {
+    id: 'theme-blog',
+    name: 'Blog Standard',
+    description: 'Design moderno para blogs e publicações',
+    thumbnail: '/admin/thumbnails/theme-blog.jpg',
+    category: 'blog'
+  },
+  {
+    id: 'theme-ecommerce',
+    name: 'Shop Premium',
+    description: 'Tema otimizado para lojas online',
+    thumbnail: '/admin/thumbnails/theme-ecommerce.jpg',
+    category: 'ecommerce'
+  },
+  {
+    id: 'theme-portfolio',
+    name: 'Portfolio Clean',
+    description: 'Design minimalista para portfolios pessoais',
+    thumbnail: '/admin/thumbnails/theme-portfolio.jpg',
+    category: 'portfolio'
+  },
+  {
+    id: 'theme-event',
+    name: 'Event Special',
+    description: 'Ideal para eventos e conferências',
+    thumbnail: '/admin/thumbnails/theme-event.jpg',
+    category: 'event'
+  }
+];
+
+// Categorias de temas para filtro
+const themeCategories = [
+  { id: 'all', name: 'Todos' },
+  { id: 'business', name: 'Negócios' },
+  { id: 'blog', name: 'Blog' },
+  { id: 'ecommerce', name: 'E-commerce' },
+  { id: 'portfolio', name: 'Portfolio' },
+  { id: 'event', name: 'Eventos' }
+];
+
+// Configurações padrão
+const defaultSiteConfig = {
+  enableComments: true,
+  enableSearch: true,
+  enableAnalytics: false,
+  analyticsId: '',
+  languageOptions: ['pt-BR', 'en-US', 'es-ES']
+};
+---
+
+<AdminLayout title="Criar Novo Site" currentSection="sites">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Criar Novo Site</h1>
+      <nav class="breadcrumbs">
+        <a href="/admin">Admin</a> / <a href="/admin/sites">Sites</a> / Criar
+      </nav>
+    </div>
+    <div class="page-actions">
+      <button type="button" class="btn-secondary" id="cancel-button">Cancelar</button>
+      <button type="submit" class="btn-primary" form="create-site-form">Criar Site</button>
+    </div>
+  </div>
+  
+  <div class="content-container">
+    <form id="create-site-form" class="create-site-form">
+      <div class="form-sections">
+        <!-- Seção 1: Informações Básicas -->
+        <section class="form-section active" id="section-basics">
+          <h2 class="section-title">Informações Básicas</h2>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="site-name" class="form-label">Nome do Site *</label>
+              <input type="text" id="site-name" name="name" class="form-input" required placeholder="Ex: Meu Site Corporativo">
+              <span class="form-help">O nome será exibido no painel administrativo</span>
+            </div>
+            
+            <div class="form-group">
+              <label for="site-domain" class="form-label">Domínio *</label>
+              <input type="text" id="site-domain" name="domain" class="form-input" required placeholder="Ex: meusite.com.br">
+              <span class="form-help">Domínio principal do site (sem http/https)</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="site-description" class="form-label">Descrição</label>
+            <textarea id="site-description" name="description" class="form-textarea" placeholder="Breve descrição do site..."></textarea>
+            <span class="form-help">Útil para identificar o propósito do site</span>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" class="btn-primary next-section">Próximo: Escolher Tema</button>
+          </div>
+        </section>
+        
+        <!-- Seção 2: Escolha do Tema -->
+        <section class="form-section" id="section-theme">
+          <h2 class="section-title">Escolha um Tema</h2>
+          
+          <div class="theme-filter">
+            <div class="theme-categories">
+              {themeCategories.map(category => (
+                <button 
+                  type="button" 
+                  class="theme-category-btn" 
+                  data-category={category.id}
+                  class:list={[{ 'active': category.id === 'all' }]}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+            
+            <div class="theme-search">
+              <input type="text" placeholder="Buscar temas..." class="form-input" id="theme-search">
+            </div>
+          </div>
+          
+          <div class="themes-grid">
+            {availableThemes.map(theme => (
+              <div class="theme-card" data-theme-id={theme.id} data-category={theme.category}>
+                <div class="theme-preview">
+                  <img src={theme.thumbnail} alt={theme.name} loading="lazy">
+                </div>
+                <div class="theme-info">
+                  <h3 class="theme-name">{theme.name}</h3>
+                  <p class="theme-description">{theme.description}</p>
+                </div>
+                <div class="theme-select">
+                  <input 
+                    type="radio" 
+                    name="themeId" 
+                    id={`theme-${theme.id}`} 
+                    value={theme.id}
+                    required
+                  >
+                  <label for={`theme-${theme.id}`} class="theme-select-label">Selecionar</label>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" class="btn-secondary prev-section">Voltar</button>
+            <button type="button" class="btn-primary next-section">Próximo: Configurações</button>
+          </div>
+        </section>
+        
+        <!-- Seção 3: Configurações -->
+        <section class="form-section" id="section-config">
+          <h2 class="section-title">Configurações</h2>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="site-language" class="form-label">Idioma Principal</label>
+              <select id="site-language" name="language" class="form-select">
+                <option value="pt-BR">Português (Brasil)</option>
+                <option value="en-US">English (United States)</option>
+                <option value="es-ES">Español</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="site-timezone" class="form-label">Fuso Horário</label>
+              <select id="site-timezone" name="timezone" class="form-select">
+                <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
+                <option value="America/New_York">New York (GMT-5)</option>
+                <option value="Europe/London">London (GMT+0)</option>
+                <option value="Europe/Paris">Paris (GMT+1)</option>
+                <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group checkbox-group">
+            <label class="form-label">Funcionalidades</label>
+            <div class="checkbox-options">
+              <div class="checkbox-option">
+                <input type="checkbox" id="enable-comments" name="enableComments" checked={defaultSiteConfig.enableComments}>
+                <label for="enable-comments">Habilitar comentários</label>
+              </div>
+              
+              <div class="checkbox-option">
+                <input type="checkbox" id="enable-search" name="enableSearch" checked={defaultSiteConfig.enableSearch}>
+                <label for="enable-search">Habilitar busca no site</label>
+              </div>
+              
+              <div class="checkbox-option">
+                <input type="checkbox" id="enable-analytics" name="enableAnalytics" checked={defaultSiteConfig.enableAnalytics}>
+                <label for="enable-analytics">Habilitar analytics</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group" id="analytics-id-group" style="display: none;">
+            <label for="analytics-id" class="form-label">ID do Google Analytics</label>
+            <input type="text" id="analytics-id" name="analyticsId" class="form-input" placeholder="Ex: G-XXXXXXXXXX">
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" class="btn-secondary prev-section">Voltar</button>
+            <button type="submit" class="btn-primary">Criar Site</button>
+          </div>
+        </section>
+      </div>
+    </form>
+  </div>
+</AdminLayout>
+
+<style>
+  /* Estilos específicos para o formulário de criação de site */
+  .create-site-form {
+    max-width: 100%;
+  }
+  
+  .form-sections {
+    position: relative;
+  }
+  
+  .form-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .form-section.active {
+    display: block;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .section-title {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-light);
+  }
+  
+  /* Estilos para seleção de temas */
+  .theme-filter {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+    align-items: center;
+  }
+  
+  .theme-categories {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+  }
+  
+  .theme-category-btn {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    background: white;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .theme-category-btn.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  
+  .theme-category-btn:hover:not(.active) {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  
+  .theme-search {
+    width: 250px;
+  }
+  
+  .themes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+  }
+  
+  .theme-card {
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    transition: all var(--transition-speed) ease;
+    position: relative;
+  }
+  
+  .theme-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--box-shadow);
+    border-color: var(--primary);
+  }
+  
+  .theme-preview {
+    height: 160px;
+    overflow: hidden;
+  }
+  
+  .theme-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .theme-card:hover .theme-preview img {
+    transform: scale(1.05);
+  }
+  
+  .theme-info {
+    padding: var(--spacing-md);
+  }
+  
+  .theme-name {
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-md);
+  }
+  
+  .theme-description {
+    color: var(--secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .theme-select {
+    padding: var(--spacing-sm);
+    border-top: 1px solid var(--border-light);
+    text-align: center;
+  }
+  
+  .theme-select input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+  }
+  
+  .theme-select-label {
+    display: block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--bg-light);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .theme-select input[type="radio"]:checked + .theme-select-label {
+    background-color: var(--primary);
+    color: white;
+  }
+  
+  .theme-select-label:hover {
+    background-color: rgba(79, 70, 229, 0.1);
+  }
+  
+  /* Estilos para checkboxes */
+  .checkbox-group {
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .checkbox-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+  }
+  
+  .checkbox-option {
+    display: flex;
+    align-items: center;
+  }
+  
+  .checkbox-option input[type="checkbox"] {
+    margin-right: var(--spacing-sm);
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .theme-filter {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--spacing-md);
+    }
+    
+    .theme-search {
+      width: 100%;
+    }
+    
+    .themes-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+    
+    .form-actions button {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  // Script para funcionalidades interativas do formulário
+  document.addEventListener('DOMContentLoaded', () => {
+    // Navegação entre seções do formulário
+    const sections = document.querySelectorAll('.form-section');
+    const nextButtons = document.querySelectorAll('.next-section');
+    const prevButtons = document.querySelectorAll('.prev-section');
+    
+    nextButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Encontrar a seção atual
+        const currentSection = document.querySelector('.form-section.active');
+        const currentIndex = Array.from(sections).indexOf(currentSection);
+        
+        // Validar campos obrigatórios na seção atual
+        const requiredFields = currentSection.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+          if (!field.value) {
+            field.classList.add('invalid');
+            isValid = false;
+          } else {
+            field.classList.remove('invalid');
+          }
+        });
+        
+        if (!isValid) {
+          alert('Por favor, preencha todos os campos obrigatórios.');
+          return;
+        }
+        
+        // Esconder seção atual e mostrar a próxima
+        if (currentIndex < sections.length - 1) {
+          currentSection.classList.remove('active');
+          sections[currentIndex + 1].classList.add('active');
+          
+          // Scroll para o topo do formulário
+          document.querySelector('.content-container').scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+    
+    prevButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Encontrar a seção atual
+        const currentSection = document.querySelector('.form-section.active');
+        const currentIndex = Array.from(sections).indexOf(currentSection);
+        
+        // Esconder seção atual e mostrar a anterior
+        if (currentIndex > 0) {
+          currentSection.classList.remove('active');
+          sections[currentIndex - 1].classList.add('active');
+          
+          // Scroll para o topo do formulário
+          document.querySelector('.content-container').scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+    
+    // Filtro de categorias de temas
+    const themeCards = document.querySelectorAll('.theme-card');
+    const categoryButtons = document.querySelectorAll('.theme-category-btn');
+    
+    categoryButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Atualizar botões ativos
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        const selectedCategory = button.dataset.category;
+        
+        // Filtrar os temas
+        themeCards.forEach(card => {
+          if (selectedCategory === 'all' || card.dataset.category === selectedCategory) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+    
+    // Busca de temas
+    const themeSearch = document.getElementById('theme-search');
+    
+    themeSearch.addEventListener('input', () => {
+      const searchValue = themeSearch.value.toLowerCase();
+      
+      themeCards.forEach(card => {
+        const themeName = card.querySelector('.theme-name').textContent.toLowerCase();
+        const themeDesc = card.querySelector('.theme-description').textContent.toLowerCase();
+        
+        if (themeName.includes(searchValue) || themeDesc.includes(searchValue)) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+    
+    // Toggle para mostrar/esconder campo de ID do Google Analytics
+    const enableAnalytics = document.getElementById('enable-analytics');
+    const analyticsIdGroup = document.getElementById('analytics-id-group');
+    
+    enableAnalytics.addEventListener('change', () => {
+      analyticsIdGroup.style.display = enableAnalytics.checked ? 'block' : 'none';
+    });
+    
+    // Botão de cancelar
+    const cancelButton = document.getElementById('cancel-button');
+    
+    cancelButton.addEventListener('click', () => {
+      if (confirm('Tem certeza que deseja cancelar? Todas as informações preenchidas serão perdidas.')) {
+        window.location.href = '/admin/sites';
+      }
+    });
+    
+    // Submissão do formulário
+    const form = document.getElementById('create-site-form');
+    
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Coletar todos os dados do formulário
+      const formData = new FormData(form);
+      const siteData = Object.fromEntries(formData.entries());
+      
+      // Converter checkboxes em valores booleanos
+      siteData.enableComments = formData.get('enableComments') === 'on';
+      siteData.enableSearch = formData.get('enableSearch') === 'on';
+      siteData.enableAnalytics = formData.get('enableAnalytics') === 'on';
+      
+      // Adicionar timestamp
+      siteData.createdAt = new Date().toISOString();
+      
+      // Aqui você enviaria os dados para a API
+      console.log('Dados do site a serem enviados:', siteData);
+      
+      // Simular envio bem-sucedido
+      setTimeout(() => {
+        alert('Site criado com sucesso!');
+        window.location.href = '/admin/sites';
+      }, 1000);
+    });
+  });
+</script>

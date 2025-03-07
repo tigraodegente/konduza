@@ -1,0 +1,195 @@
+---
+/**
+ * Componente de Grade de Recursos/Destaques
+ * 
+ * Este componente exibe uma grade de recursos ou destaques
+ * com ícones, títulos e descrições.
+ */
+
+// Props do componente
+const {
+  title = 'Nossos Recursos',
+  subtitle = 'Conheça as principais funcionalidades que oferecemos',
+  columns = 3, // 1, 2, 3, 4
+  features = [
+    {
+      title: 'Recurso 1',
+      description: 'Descrição do recurso 1.',
+      icon: 'star'
+    },
+    {
+      title: 'Recurso 2',
+      description: 'Descrição do recurso 2.',
+      icon: 'gear'
+    },
+    {
+      title: 'Recurso 3',
+      description: 'Descrição do recurso 3.',
+      icon: 'chart-line'
+    }
+  ],
+  iconType = 'fas', // fas, far, fab
+  cardStyle = 'shadow', // shadow, border, plain, filled
+  hoverEffect = true,
+  textAlign = 'center' // left, center, right
+} = Astro.props;
+
+// Configurar classes
+const cardClasses = `feature-card card-${cardStyle} ${hoverEffect ? 'card-hover' : ''} text-${textAlign}`;
+const gridClass = `feature-grid grid-cols-${columns}`;
+---
+
+<section class="feature-section">
+  <div class="container">
+    {title && <h2 class="section-title">{title}</h2>}
+    {subtitle && <p class="section-subtitle">{subtitle}</p>}
+    
+    <div class={gridClass}>
+      {features.map((feature) => (
+        <div class={cardClasses}>
+          {feature.icon && (
+            <div class="feature-icon">
+              <i class={`${iconType} fa-${feature.icon}`}></i>
+            </div>
+          )}
+          <h3 class="feature-title">{feature.title}</h3>
+          <p class="feature-description">{feature.description}</p>
+          {feature.linkUrl && (
+            <a href={feature.linkUrl} class="feature-link">
+              {feature.linkText || 'Saiba mais'}
+            </a>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Estilos do componente */
+  .feature-section {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .section-subtitle {
+    text-align: center;
+    color: var(--color-text-light);
+    margin-bottom: var(--spacing-lg);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* Grid de recursos */
+  .feature-grid {
+    display: grid;
+    gap: var(--spacing-lg);
+  }
+  
+  .grid-cols-1 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  /* Cards de recursos */
+  .feature-card {
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    transition: all var(--transition-normal);
+  }
+  
+  /* Estilos de card */
+  .card-shadow {
+    background-color: var(--color-background);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .card-border {
+    background-color: var(--color-background);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-plain {
+    background-color: transparent;
+  }
+  
+  .card-filled {
+    background-color: var(--color-background-alt);
+  }
+  
+  /* Hover effect */
+  .card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Alinhamento de texto */
+  .text-left {
+    text-align: left;
+  }
+  
+  .text-center {
+    text-align: center;
+  }
+  
+  .text-right {
+    text-align: right;
+  }
+  
+  /* Elementos internos do card */
+  .feature-icon {
+    font-size: 2.5rem;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .feature-title {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .feature-description {
+    color: var(--color-text-light);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .feature-link {
+    display: inline-block;
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+  }
+  
+  .feature-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Responsivo */
+  @media (max-width: 992px) {
+    .grid-cols-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .grid-cols-3, 
+    .grid-cols-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

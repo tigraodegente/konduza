@@ -1,0 +1,69 @@
+---
+import { processTemplate } from '../utils/template-processor';
+import ComponentRenderer from './ComponentRenderer.astro';
+
+const { data } = Astro.props;
+const { site, page, template } = data;
+
+// Processar o template HTML
+const processedHtml = processTemplate(template.html, {
+  page,
+  site
+});
+
+// Extrair regiões do template
+const regions = template.regions || [];
+---
+
+<html lang={site.locale || 'pt-BR'}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{page.seo?.title || page.title}</title>
+    
+    <!-- Metatags SEO -->
+    <meta name="description" content={page.seo?.description} />
+    {page.seo?.keywords && (
+      <meta name="keywords" content={page.seo.keywords.join(', ')} />
+    )}
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content={page.seo?.ogTitle || page.title} />
+    <meta property="og:description" content={page.seo?.ogDescription || page.seo?.description} />
+    {page.seo?.ogImage && (
+      <meta property="og:image" content={page.seo.ogImage} />
+    )}
+    
+    <!-- CSS do tema -->
+    <link rel="stylesheet" href={`/themes/${site.theme.slug}/css/variables.css`} />
+    <link rel="stylesheet" href={`/themes/${site.theme.slug}/css/base.css`} />
+    <link rel="stylesheet" href={`/themes/${site.theme.slug}/css/components.css`} />
+    <link rel="stylesheet" href={`/themes/${site.theme.slug}/css/utilities.css`} />
+    
+    <!-- JS do tema -->
+    <script src={`/themes/${site.theme.slug}/js/theme.js`} defer></script>
+    
+    <!-- Estilos personalizados do site -->
+    {site.theme.config?.customCSS && (
+      <style set:html={site.theme.config.customCSS}></style>
+    )}
+  </head>
+  <body>
+    <!-- Renderizar o template com as regiões -->
+    <Fragment set:html={processedHtml.beforeRegions} />
+    
+    {regions.map(region => (
+      <div class={`region region-${region.name}`} data-region={region.name}>
+        {page.regions && page.regions[region.name]?.components.map(component => (
+          <ComponentRenderer 
+            component={component.component}
+            props={component.props}
+            id={component.id}
+          />
+        ))}
+      </div>
+    ))}
+    
+    <Fragment set:html={processedHtml.afterRegions} />
+  </body>
+</html>

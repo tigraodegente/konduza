@@ -1,0 +1,565 @@
+---
+// src/pages/admin/themes/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// Em um ambiente real, você buscaria esses dados da API
+const themes = [
+  {
+    id: 'theme-business',
+    name: 'Business Pro',
+    description: 'Um tema profissional para sites corporativos',
+    thumbnail: '/admin/thumbnails/theme-business.jpg',
+    category: 'business',
+    author: 'Konduza Team',
+    version: '1.0.0',
+    usageCount: 12,
+    lastUpdated: '2025-02-15T10:30:00.000Z'
+  },
+  {
+    id: 'theme-blog',
+    name: 'Blog Standard',
+    description: 'Design moderno para blogs e publicações',
+    thumbnail: '/admin/thumbnails/theme-blog.jpg',
+    category: 'blog',
+    author: 'Konduza Team',
+    version: '1.1.2',
+    usageCount: 8,
+    lastUpdated: '2025-02-28T15:45:00.000Z'
+  },
+  {
+    id: 'theme-ecommerce',
+    name: 'Shop Premium',
+    description: 'Tema otimizado para lojas online',
+    thumbnail: '/admin/thumbnails/theme-ecommerce.jpg',
+    category: 'ecommerce',
+    author: 'Konduza Team',
+    version: '1.2.0',
+    usageCount: 5,
+    lastUpdated: '2025-03-05T08:20:00.000Z'
+  },
+  {
+    id: 'theme-portfolio',
+    name: 'Portfolio Clean',
+    description: 'Design minimalista para portfolios pessoais',
+    thumbnail: '/admin/thumbnails/theme-portfolio.jpg',
+    category: 'portfolio',
+    author: 'Konduza Team',
+    version: '1.0.1',
+    usageCount: 15,
+    lastUpdated: '2025-02-20T12:15:00.000Z'
+  },
+  {
+    id: 'theme-event',
+    name: 'Event Special',
+    description: 'Ideal para eventos e conferências',
+    thumbnail: '/admin/thumbnails/theme-event.jpg',
+    category: 'event',
+    author: 'Konduza Team',
+    version: '1.0.0',
+    usageCount: 3,
+    lastUpdated: '2025-03-04T09:10:00.000Z'
+  }
+];
+
+// Categorias de temas para filtro
+const categories = [
+  { id: 'all', name: 'Todos' },
+  { id: 'business', name: 'Negócios' },
+  { id: 'blog', name: 'Blog' },
+  { id: 'ecommerce', name: 'E-commerce' },
+  { id: 'portfolio', name: 'Portfolio' },
+  { id: 'event', name: 'Eventos' }
+];
+
+// Função para formatar data
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
+}
+---
+
+<AdminLayout title="Biblioteca de Temas" currentSection="themes">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Biblioteca de Temas</h1>
+      <nav class="breadcrumbs">
+        <a href="/admin">Admin</a> / <a href="/admin/themes">Temas</a>
+      </nav>
+    </div>
+    <div class="page-actions">
+      <a href="/admin/themes/criar" class="btn-primary">Novo Tema</a>
+      <a href="/admin/themes/importar" class="btn-secondary">Importar Tema</a>
+    </div>
+  </div>
+  
+  <div class="content-container">
+    <div class="themes-header">
+      <div class="theme-filter">
+        <div class="theme-view-options">
+          <button type="button" class="view-option active" data-view="grid">
+            Grid
+          </button>
+          <button type="button" class="view-option" data-view="list">
+            Lista
+          </button>
+        </div>
+        
+        <div class="theme-categories">
+          {categories.map(category => (
+            <button 
+              type="button" 
+              class:list={['category-filter', { active: category.id === 'all' }]}
+              data-category={category.id}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+        
+        <div class="theme-search">
+          <input type="text" placeholder="Buscar temas..." class="form-input" id="theme-search">
+        </div>
+      </div>
+    </div>
+    
+    <!-- Visualização em Grid -->
+    <div class="themes-view grid-view active" id="grid-view">
+      <div class="themes-grid">
+        {themes.map(theme => (
+          <div class="theme-card" data-category={theme.category}>
+            <div class="theme-preview">
+              <img src={theme.thumbnail} alt={theme.name} loading="lazy">
+              <div class="theme-actions">
+                <a href={`/admin/themes/${theme.id}`} class="theme-action">Ver Detalhes</a>
+                <a href={`/admin/themes/${theme.id}/editar`} class="theme-action">Editar</a>
+              </div>
+            </div>
+            <div class="theme-info">
+              <h3 class="theme-name">{theme.name}</h3>
+              <p class="theme-description">{theme.description}</p>
+              <div class="theme-meta">
+                <span class="theme-version">v{theme.version}</span>
+                <span class="theme-usage">{theme.usageCount} sites</span>
+                <span class="theme-date">Atualizado: {formatDate(theme.lastUpdated)}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    
+    <!-- Visualização em Lista -->
+    <div class="themes-view list-view" id="list-view">
+      <table class="themes-table">
+        <thead>
+          <tr>
+            <th>Tema</th>
+            <th>Categoria</th>
+            <th>Versão</th>
+            <th>Uso</th>
+            <th>Última Atualização</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {themes.map(theme => (
+            <tr data-category={theme.category}>
+              <td class="theme-cell">
+                <div class="theme-thumbnail">
+                  <img src={theme.thumbnail} alt={theme.name} width="60" height="40" loading="lazy">
+                </div>
+                <div class="theme-info-compact">
+                  <h4>{theme.name}</h4>
+                  <p>{theme.description.substring(0, 50)}...</p>
+                </div>
+              </td>
+              <td>{theme.category}</td>
+              <td>{theme.version}</td>
+              <td>{theme.usageCount} sites</td>
+              <td>{formatDate(theme.lastUpdated)}</td>
+              <td class="actions-cell">
+                <a href={`/admin/themes/${theme.id}`} class="btn-icon" title="Ver Detalhes">
+                  👁️
+                </a>
+                <a href={`/admin/themes/${theme.id}/editar`} class="btn-icon" title="Editar">
+                  ✏️
+                </a>
+                <a href={`/admin/themes/${theme.id}/duplicar`} class="btn-icon" title="Duplicar">
+                  📋
+                </a>
+                <button class="btn-icon" title="Excluir" data-theme-id={theme.id}>
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  /* Estilos específicos da página de Temas */
+  .themes-header {
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .theme-filter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+  }
+  
+  .theme-view-options {
+    display: flex;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+  }
+  
+  .view-option {
+    background: white;
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-md);
+    cursor: pointer;
+  }
+  
+  .view-option.active {
+    background-color: var(--primary);
+    color: white;
+  }
+  
+  .view-option:not(.active):hover {
+    background-color: var(--bg-light);
+  }
+  
+  .theme-categories {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+  }
+  
+  .category-filter {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    background: white;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .category-filter.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  
+  .category-filter:hover:not(.active) {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  
+  .theme-search {
+    min-width: 250px;
+  }
+  
+  /* Visualização em Grid */
+  .themes-view {
+    display: none;
+  }
+  
+  .themes-view.active {
+    display: block;
+  }
+  
+  .themes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+  }
+  
+  .theme-card {
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .theme-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--box-shadow);
+  }
+  
+  .theme-preview {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+  }
+  
+  .theme-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-speed) ease;
+  }
+  
+  .theme-card:hover .theme-preview img {
+    transform: scale(1.05);
+  }
+  
+  .theme-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+  }
+  
+  .theme-card:hover .theme-actions {
+    opacity: 1;
+  }
+  
+  .theme-action {
+    flex: 1;
+    text-align: center;
+    padding: var(--spacing-sm);
+    color: white;
+    transition: background-color var(--transition-speed) ease;
+  }
+  
+  .theme-action:hover {
+    background-color: var(--primary);
+  }
+  
+  .theme-info {
+    padding: var(--spacing-md);
+  }
+  
+  .theme-name {
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-lg);
+  }
+  
+  .theme-description {
+    color: var(--secondary);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+  }
+  
+  .theme-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--secondary);
+  }
+  
+  /* Visualização em Lista */
+  .themes-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .themes-table th {
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 2px solid var(--border-light);
+  }
+  
+  .themes-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+  }
+  
+  .theme-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+  
+  .theme-thumbnail {
+    flex-shrink: 0;
+    width: 60px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: var(--border-radius-sm);
+  }
+  
+  .theme-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .theme-info-compact h4 {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: var(--font-size-md);
+  }
+  
+  .theme-info-compact p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--secondary);
+  }
+  
+  .actions-cell {
+    display: flex;
+    gap: var(--spacing-sm);
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .theme-filter {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .theme-search {
+      width: 100%;
+    }
+    
+    .themes-table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+</style>
+
+<script>
+  // Script para funcionalidades interativas da página de temas
+  document.addEventListener('DOMContentLoaded', () => {
+    // Alternar entre visualizações Grid e Lista
+    const viewOptions = document.querySelectorAll('.view-option');
+    const gridView = document.getElementById('grid-view');
+    const listView = document.getElementById('list-view');
+    
+    viewOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        // Atualizar botões
+        viewOptions.forEach(btn => btn.classList.remove('active'));
+        option.classList.add('active');
+        
+        // Mostrar visualização selecionada
+        const viewType = option.dataset.view;
+        
+        if (viewType === 'grid') {
+          gridView.classList.add('active');
+          listView.classList.remove('active');
+        } else {
+          gridView.classList.remove('active');
+          listView.classList.add('active');
+        }
+      });
+    });
+    
+    // Filtrar por categoria
+    const categoryButtons = document.querySelectorAll('.category-filter');
+    const themeCards = document.querySelectorAll('.theme-card');
+    const themeRows = document.querySelectorAll('.themes-table tbody tr');
+    
+    categoryButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Atualizar botões
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        const selectedCategory = button.dataset.category;
+        
+        // Filtrar cards na visualização grid
+        themeCards.forEach(card => {
+          if (selectedCategory === 'all' || card.dataset.category === selectedCategory) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        
+        // Filtrar linhas na visualização lista
+        themeRows.forEach(row => {
+          if (selectedCategory === 'all' || row.dataset.category === selectedCategory) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    });
+    
+    // Buscar temas
+    const searchInput = document.getElementById('theme-search');
+    
+    searchInput.addEventListener('input', () => {
+      const searchText = searchInput.value.toLowerCase();
+      
+      // Buscar nos cards
+      themeCards.forEach(card => {
+        const themeName = card.querySelector('.theme-name').textContent.toLowerCase();
+        const themeDesc = card.querySelector('.theme-description').textContent.toLowerCase();
+        
+        if (themeName.includes(searchText) || themeDesc.includes(searchText)) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      
+      // Buscar nas linhas da tabela
+      themeRows.forEach(row => {
+        const themeName = row.querySelector('h4').textContent.toLowerCase();
+        const themeDesc = row.querySelector('p').textContent.toLowerCase();
+        
+        if (themeName.includes(searchText) || themeDesc.includes(searchText)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+    
+    // Confirmar exclusão de tema
+    const deleteButtons = document.querySelectorAll('.btn-icon[title="Excluir"]');
+    
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const themeId = button.dataset.themeId;
+        let themeName;
+        
+        // Encontrar o nome do tema com base no ID
+        if (button.closest('tr')) {
+          themeName = button.closest('tr').querySelector('h4').textContent;
+        } else {
+          themeName = Array.from(themeCards).find(card => 
+            card.dataset.themeId === themeId
+          )?.querySelector('.theme-name').textContent || 'tema';
+        }
+        
+        if (confirm(`Tem certeza que deseja excluir o tema "${themeName}"? Esta ação não pode ser desfeita.`)) {
+          // Aqui você enviaria uma requisição para a API para excluir o tema
+          console.log(`Excluindo tema ${themeId}: ${themeName}`);
+          
+          // Após confirmar, remover o elemento da UI
+          if (button.closest('tr')) {
+            button.closest('tr').remove();
+          } else {
+            Array.from(themeCards).find(card => 
+              card.dataset.themeId === themeId
+            )?.remove();
+          }
+        }
+      });
+    });
+  });
+</script>

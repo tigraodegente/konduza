@@ -1,0 +1,245 @@
+---
+// src/pages/login.astro
+---
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Konduza</title>
+  <link rel="stylesheet" href="/admin/css/admin.css">
+  <style>
+    body {
+      background-color: var(--bg-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+    
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      background-color: white;
+      border-radius: var(--border-radius-md);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+    }
+    
+    .login-header {
+      background-color: var(--primary);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    .login-logo {
+      max-width: 180px;
+      margin-bottom: 1rem;
+    }
+    
+    .login-title {
+      margin: 0;
+      font-weight: 500;
+    }
+    
+    .login-form {
+      padding: 2rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-light);
+      border-radius: var(--border-radius-sm);
+      transition: border-color 0.3s ease;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    .remember-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .remember-me {
+      display: flex;
+      align-items: center;
+    }
+    
+    .remember-me input {
+      margin-right: 0.5rem;
+    }
+    
+    .forgot-password {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    
+    .forgot-password:hover {
+      text-decoration: underline;
+    }
+    
+    .login-btn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .login-btn:hover {
+      background-color: var(--primary-hover);
+    }
+    
+    .login-footer {
+      text-align: center;
+      padding: 1rem;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.875rem;
+      color: var(--secondary);
+    }
+    
+    .error-message {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius-sm);
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      display: none;
+    }
+    
+    .error-message.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <img src="/admin/logo.svg" alt="Konduza" class="login-logo">
+      <h1 class="login-title">Painel Administrativo</h1>
+    </div>
+    
+    <div class="login-form">
+      <div class="error-message" id="error-message">
+        Nome de usuário ou senha incorretos. Por favor, tente novamente.
+      </div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" id="email" name="email" class="form-input" required placeholder="seu@email.com">
+        </div>
+        
+        <div class="form-group">
+          <label for="password" class="form-label">Senha</label>
+          <input type="password" id="password" name="password" class="form-input" required placeholder="••••••••">
+        </div>
+        
+        <div class="remember-row">
+          <div class="remember-me">
+            <input type="checkbox" id="remember" name="remember">
+            <label for="remember">Lembrar-me</label>
+          </div>
+          <a href="/forgot-password" class="forgot-password">Esqueceu a senha?</a>
+        </div>
+        
+        <button type="submit" class="login-btn">Entrar</button>
+      </form>
+    </div>
+    
+    <div class="login-footer">
+      &copy; 2025 Konduza. Todos os direitos reservados.
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const API_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000';
+      const loginForm = document.getElementById('login-form');
+      const errorMessage = document.getElementById('error-message');
+      
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const remember = document.getElementById('remember').checked;
+        
+        try {
+          // Mostrar indicador de carregamento se necessário
+          // ...
+          
+          // Enviar requisição para API de login do Payload CMS
+          const response = await fetch(`${API_URL}/api/users/login`, {
+            method: 'POST',
+            credentials: 'include', // Importante para incluir cookies
+            headers: {
+              'Content-Type': 'application/json',
+              'X-API-Key': API_URL === 'http://localhost:3000' ? 'dev_api_key' : undefined
+            },
+            body: JSON.stringify({
+              email,
+              password,
+            }),
+          });
+          
+          // Processar resposta
+          if (response.ok) {
+            // Login bem-sucedido
+            errorMessage.classList.remove('active');
+            const userData = await response.json();
+            
+            // Armazenar dados básicos do usuário no localStorage (sem informações sensíveis)
+            // Cookies de autenticação serão gerenciados automaticamente pelo navegador
+            localStorage.setItem('konduza_user', JSON.stringify({
+              email: userData.user.email,
+              name: userData.user.name,
+              roles: userData.user.roles
+            }));
+            
+            // Redirecionar para o dashboard ou página solicitada
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectTo = urlParams.get('redirect') || '/admin';
+            window.location.href = redirectTo;
+          } else {
+            // Login falhou
+            errorMessage.textContent = 'Nome de usuário ou senha incorretos. Por favor, tente novamente.';
+            errorMessage.classList.add('active');
+          }
+        } catch (error) {
+          console.error('Erro ao tentar fazer login:', error);
+          errorMessage.textContent = 'Erro ao conectar com o servidor. Por favor, tente novamente.';
+          errorMessage.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

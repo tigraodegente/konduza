@@ -1,0 +1,971 @@
+---
+// src/pages/admin/themes/componentes/index.astro
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+
+// Em um ambiente real, você buscaria esses dados da API
+const components = [
+  {
+    id: 'comp-header',
+    name: 'Header',
+    description: 'Cabeçalho principal com navegação e logotipo',
+    thumbnail: '/admin/thumbnails/component-header.jpg',
+    category: 'layout',
+    hydration: 'none',
+    lastUpdated: '2025-02-15T10:30:00.000Z'
+  },
+  {
+    id: 'comp-hero',
+    name: 'Hero Banner',
+    description: 'Banner principal com chamada para ação',
+    thumbnail: '/admin/thumbnails/component-hero.jpg',
+    category: 'content',
+    hydration: 'none',
+    lastUpdated: '2025-02-28T15:45:00.000Z'
+  },
+  {
+    id: 'comp-features',
+    name: 'Features Grid',
+    description: 'Grid de recursos/serviços com ícones',
+    thumbnail: '/admin/thumbnails/component-features.jpg',
+    category: 'content',
+    hydration: 'none',
+    lastUpdated: '2025-03-05T08:20:00.000Z'
+  },
+  {
+    id: 'comp-gallery',
+    name: 'Galeria de Imagens',
+    description: 'Galeria de imagens com lightbox',
+    thumbnail: '/admin/thumbnails/component-gallery.jpg',
+    category: 'media',
+    hydration: 'svelte',
+    lastUpdated: '2025-02-20T12:15:00.000Z'
+  },
+  {
+    id: 'comp-slider',
+    name: 'Carrossel',
+    description: 'Slider de conteúdo com navegação',
+    thumbnail: '/admin/thumbnails/component-slider.jpg',
+    category: 'media',
+    hydration: 'react',
+    lastUpdated: '2025-03-04T09:10:00.000Z'
+  },
+  {
+    id: 'comp-form',
+    name: 'Formulário de Contato',
+    description: 'Formulário de contato com validação',
+    thumbnail: '/admin/thumbnails/component-form.jpg',
+    category: 'form',
+    hydration: 'react',
+    lastUpdated: '2025-03-01T14:25:00.000Z'
+  },
+  {
+    id: 'comp-footer',
+    name: 'Footer',
+    description: 'Rodapé com links e informações legais',
+    thumbnail: '/admin/thumbnails/component-footer.jpg',
+    category: 'layout',
+    hydration: 'none',
+    lastUpdated: '2025-02-25T16:40:00.000Z'
+  }
+];
+
+// Categorias de componentes
+const categories = [
+  { id: 'all', name: 'Todos' },
+  { id: 'layout', name: 'Layout' },
+  { id: 'content', name: 'Conteúdo' },
+  { id: 'media', name: 'Mídia' },
+  { id: 'form', name: 'Formulários' },
+  { id: 'misc', name: 'Diversos' }
+];
+
+// Tipos de hidratação
+const hydrationTypes = [
+  { id: 'all', name: 'Todos' },
+  { id: 'none', name: 'Estático' },
+  { id: 'react', name: 'React' },
+  { id: 'svelte', name: 'Svelte' },
+  { id: 'web-component', name: 'Web Component' }
+];
+
+// Função para formatar data
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
+}
+
+// Função para obter cor do tipo de hidratação
+function getHydrationColor(type) {
+  switch (type) {
+    case 'none':
+      return 'hydration-static';
+    case 'react':
+      return 'hydration-react';
+    case 'svelte':
+      return 'hydration-svelte';
+    case 'web-component':
+      return 'hydration-web';
+    default:
+      return '';
+  }
+}
+
+// Função para traduzir tipo de hidratação
+function translateHydration(type) {
+  switch (type) {
+    case 'none':
+      return 'Estático';
+    case 'react':
+      return 'React';
+    case 'svelte':
+      return 'Svelte';
+    case 'web-component':
+      return 'Web Component';
+    default:
+      return type;
+  }
+}
+---
+
+<AdminLayout title="Componentes de Tema" currentSection="themes">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Componentes de Tema</h1>
+      <nav class="breadcrumbs">
+        <a href="/admin">Admin</a> / <a href="/admin/themes">Temas</a> / Componentes
+      </nav>
+    </div>
+    <div class="page-actions">
+      <a href="/admin/themes/componentes/criar" class="btn-primary">Novo Componente</a>
+      <button class="btn-secondary" id="import-component">Importar</button>
+    </div>
+  </div>
+  
+  <div class="content-container">
+    <!-- Filtros -->
+    <div class="component-filters">
+      <div class="category-filters">
+        <span class="filter-label">Categoria:</span>
+        <div class="filter-options">
+          {categories.map(category => (
+            <button 
+              type="button" 
+              class={`filter-btn ${category.id === 'all' ? 'active' : ''}`}
+              data-category={category.id}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <div class="hydration-filters">
+        <span class="filter-label">Tipo:</span>
+        <div class="filter-options">
+          {hydrationTypes.map(type => (
+            <button 
+              type="button" 
+              class={`filter-btn ${type.id === 'all' ? 'active' : ''}`}
+              data-hydration={type.id}
+            >
+              {type.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <div class="search-filter">
+        <input type="text" placeholder="Buscar componentes..." class="form-input" id="component-search">
+      </div>
+    </div>
+    
+    <!-- Grade de Componentes -->
+    <div class="components-grid">
+      {components.map(component => (
+        <div class="component-card" data-category={component.category} data-hydration={component.hydration}>
+          <div class="component-thumbnail">
+            <img src={component.thumbnail} alt={component.name} loading="lazy">
+            <div class="component-actions">
+              <a href={`/admin/themes/componentes/${component.id}`} class="component-action">Ver</a>
+              <a href={`/admin/themes/componentes/${component.id}/editar`} class="component-action">Editar</a>
+            </div>
+          </div>
+          <div class="component-info">
+            <div class="component-header">
+              <h3 class="component-name">{component.name}</h3>
+              <span class={`hydration-badge ${getHydrationColor(component.hydration)}`}>
+                {translateHydration(component.hydration)}
+              </span>
+            </div>
+            <p class="component-description">{component.description}</p>
+            <div class="component-meta">
+              <span class="component-category">{categories.find(c => c.id === component.category)?.name || component.category}</span>
+              <span class="component-date">Atualizado: {formatDate(component.lastUpdated)}</span>
+            </div>
+          </div>
+          <div class="component-footer">
+            <button class="component-preview-btn" data-component-id={component.id}>
+              Visualizar
+            </button>
+            <div class="component-actions-dropdown">
+              <button class="btn-icon dropdown-toggle">•••</button>
+              <div class="dropdown-menu">
+                <a href={`/admin/themes/componentes/${component.id}/duplicar`}>Duplicar</a>
+                <a href={`/admin/themes/componentes/${component.id}/exportar`}>Exportar</a>
+                <button class="delete-btn" data-component-id={component.id}>Excluir</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+    
+    <!-- Componente sem Resultados -->
+    <div class="no-results" style="display: none;">
+      <div class="no-results-icon">🔍</div>
+      <h3>Nenhum componente encontrado</h3>
+      <p>Tente ajustar seus filtros ou criar um novo componente.</p>
+      <a href="/admin/themes/componentes/criar" class="btn-primary">Criar Componente</a>
+    </div>
+  </div>
+  
+  <!-- Modal de Visualização do Componente -->
+  <div class="preview-modal" id="preview-modal">
+    <div class="preview-content">
+      <div class="preview-header">
+        <h3 id="preview-title">Visualização do Componente</h3>
+        <button class="close-modal" id="close-preview">&times;</button>
+      </div>
+      <div class="preview-body">
+        <div class="preview-tabs">
+          <button class="preview-tab active" data-tab="preview">Visualização</button>
+          <button class="preview-tab" data-tab="html">HTML</button>
+          <button class="preview-tab" data-tab="css">CSS</button>
+          <button class="preview-tab" data-tab="js">JavaScript</button>
+        </div>
+        <div class="preview-panels">
+          <div class="preview-panel active" id="preview-panel-preview">
+            <iframe id="preview-iframe" title="Visualização do Componente" frameborder="0"></iframe>
+          </div>
+          <div class="preview-panel" id="preview-panel-html">
+            <pre><code id="preview-html-code" class="language-html"><!-- HTML do componente será exibido aqui --></code></pre>
+          </div>
+          <div class="preview-panel" id="preview-panel-css">
+            <pre><code id="preview-css-code" class="language-css">/* CSS do componente será exibido aqui */</code></pre>
+          </div>
+          <div class="preview-panel" id="preview-panel-js">
+            <pre><code id="preview-js-code" class="language-javascript">// JavaScript do componente será exibido aqui</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  /* Estilos específicos da página de Componentes */
+  .component-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .filter-label {
+    font-weight: 500;
+    margin-right: var(--spacing-sm);
+  }
+  
+  .filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+  
+  .filter-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    background: white;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .filter-btn.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  
+  .filter-btn:hover:not(.active) {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  
+  .search-filter {
+    flex-grow: 1;
+    min-width: 250px;
+  }
+  
+  /* Grade de Componentes */
+  .components-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+  }
+  
+  .component-card {
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    transition: all var(--transition-speed) ease;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .component-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--box-shadow);
+  }
+  
+  .component-thumbnail {
+    position: relative;
+    height: 160px;
+    overflow: hidden;
+  }
+  
+  .component-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-speed) ease;
+  }
+  
+  .component-card:hover .component-thumbnail img {
+    transform: scale(1.05);
+  }
+  
+  .component-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+  }
+  
+  .component-card:hover .component-actions {
+    opacity: 1;
+  }
+  
+  .component-action {
+    flex: 1;
+    text-align: center;
+    padding: var(--spacing-sm);
+    color: white;
+    transition: background-color var(--transition-speed) ease;
+  }
+  
+  .component-action:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+  
+  .component-info {
+    padding: var(--spacing-md);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .component-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .component-name {
+    margin: 0;
+    font-size: var(--font-size-md);
+  }
+  
+  .hydration-badge {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  
+  .hydration-static {
+    background-color: rgba(100, 116, 139, 0.1);
+    color: var(--secondary);
+  }
+  
+  .hydration-react {
+    background-color: rgba(97, 218, 251, 0.1);
+    color: #61dafb;
+  }
+  
+  .hydration-svelte {
+    background-color: rgba(255, 62, 0, 0.1);
+    color: #ff3e00;
+  }
+  
+  .hydration-web {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+  }
+  
+  .component-description {
+    color: var(--secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-md);
+    flex-grow: 1;
+  }
+  
+  .component-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-sm);
+    color: var(--secondary);
+  }
+  
+  .component-footer {
+    display: flex;
+    border-top: 1px solid var(--border-light);
+  }
+  
+  .component-preview-btn {
+    flex-grow: 1;
+    padding: var(--spacing-sm);
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+  }
+  
+  .component-preview-btn:hover {
+    background-color: var(--bg-light);
+    color: var(--primary);
+  }
+  
+  .component-actions-dropdown {
+    position: relative;
+    border-left: 1px solid var(--border-light);
+  }
+  
+  .dropdown-toggle {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .dropdown-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--box-shadow);
+    min-width: 150px;
+    z-index: 10;
+    display: none;
+  }
+  
+  .component-actions-dropdown.active .dropdown-menu {
+    display: block;
+  }
+  
+  .dropdown-menu a, 
+  .dropdown-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    background: transparent;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+  }
+  
+  .dropdown-menu a:hover, 
+  .dropdown-menu button:hover {
+    background-color: var(--bg-light);
+  }
+  
+  .dropdown-menu .delete-btn {
+    color: var(--danger);
+  }
+  
+  .dropdown-menu .delete-btn:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+  
+  /* Sem resultados */
+  .no-results {
+    text-align: center;
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .no-results-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+  }
+  
+  .no-results h3 {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .no-results p {
+    color: var(--secondary);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  /* Modal de Visualização */
+  .preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .preview-modal.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .preview-content {
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--box-shadow);
+  }
+  
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .preview-header h3 {
+    margin: 0;
+  }
+  
+  .close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--secondary);
+  }
+  
+  .close-modal:hover {
+    color: var(--danger);
+  }
+  
+  .preview-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .preview-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .preview-tab {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+  }
+  
+  .preview-tab.active {
+    border-bottom-color: var(--primary);
+    color: var(--primary);
+  }
+  
+  .preview-panels {
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .preview-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+    display: none;
+    padding: var(--spacing-md);
+  }
+  
+  .preview-panel.active {
+    display: block;
+  }
+  
+  #preview-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  
+  pre {
+    margin: 0;
+    background-color: var(--bg-light);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    overflow: auto;
+  }
+  
+  code {
+    font-family: monospace;
+    font-size: var(--font-size-sm);
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .component-filters {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .filter-options {
+      margin-top: var(--spacing-xs);
+    }
+    
+    .search-filter {
+      width: 100%;
+    }
+    
+    .components-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .preview-content {
+      width: 95%;
+      max-height: 95vh;
+    }
+  }
+</style>
+
+<script>
+  // Script para funcionalidades interativas da página de componentes
+  document.addEventListener('DOMContentLoaded', () => {
+    // Filtros de categoria
+    const categoryButtons = document.querySelectorAll('[data-category]');
+    const hydrationButtons = document.querySelectorAll('[data-hydration]');
+    const componentCards = document.querySelectorAll('.component-card');
+    const searchInput = document.getElementById('component-search');
+    const noResults = document.querySelector('.no-results');
+    
+    // Função para aplicar filtros
+    function applyFilters() {
+      const activeCategory = document.querySelector('.filter-btn[data-category].active').dataset.category;
+      const activeHydration = document.querySelector('.filter-btn[data-hydration].active').dataset.hydration;
+      const searchValue = searchInput.value.toLowerCase();
+      
+      let visibleCount = 0;
+      
+      componentCards.forEach(card => {
+        const cardCategory = card.dataset.category;
+        const cardHydration = card.dataset.hydration;
+        const cardName = card.querySelector('.component-name').textContent.toLowerCase();
+        const cardDesc = card.querySelector('.component-description').textContent.toLowerCase();
+        
+        const matchesCategory = activeCategory === 'all' || cardCategory === activeCategory;
+        const matchesHydration = activeHydration === 'all' || cardHydration === activeHydration;
+        const matchesSearch = searchValue === '' || cardName.includes(searchValue) || cardDesc.includes(searchValue);
+        
+        const isVisible = matchesCategory && matchesHydration && matchesSearch;
+        card.style.display = isVisible ? '' : 'none';
+        
+        if (isVisible) {
+          visibleCount++;
+        }
+      });
+      
+      // Mostrar mensagem de nenhum resultado se necessário
+      noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+    
+    // Event listeners para filtros de categoria
+    categoryButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        applyFilters();
+      });
+    });
+    
+    // Event listeners para filtros de hidratação
+    hydrationButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        hydrationButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        applyFilters();
+      });
+    });
+    
+    // Event listener para busca
+    searchInput.addEventListener('input', applyFilters);
+    
+    // Dropdown de ações
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    
+    dropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dropdown = toggle.closest('.component-actions-dropdown');
+        
+        // Fechar outros dropdowns
+        document.querySelectorAll('.component-actions-dropdown.active').forEach(dd => {
+          if (dd !== dropdown) {
+            dd.classList.remove('active');
+          }
+        });
+        
+        dropdown.classList.toggle('active');
+      });
+    });
+    
+    // Fechar dropdowns ao clicar fora
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.component-actions-dropdown.active').forEach(dropdown => {
+        dropdown.classList.remove('active');
+      });
+    });
+    
+    // Modal de visualização
+    const previewModal = document.getElementById('preview-modal');
+    const previewButtons = document.querySelectorAll('.component-preview-btn');
+    const closePreviewButton = document.getElementById('close-preview');
+    const previewTitle = document.getElementById('preview-title');
+    const previewTabs = document.querySelectorAll('.preview-tab');
+    const previewPanels = document.querySelectorAll('.preview-panel');
+    
+    // Componentes de exemplo para preview (em um ambiente real, viriam da API)
+    const componentPreviews = {
+      'comp-header': {
+        name: 'Header',
+        html: `<header class="site-header">
+  <div class="container">
+    <div class="logo">
+      <a href="#"><img src="/logo.svg" alt="Logo" /></a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="#">Início</a></li>
+        <li><a href="#">Sobre</a></li>
+        <li><a href="#">Serviços</a></li>
+        <li><a href="#">Contato</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>`,
+        css: `.site-header {
+  background-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 1rem 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo img {
+  height: 40px;
+}
+
+.main-nav ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.main-nav li {
+  margin-left: 1.5rem;
+}
+
+.main-nav a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.main-nav a:hover {
+  color: #4f46e5;
+}`,
+        js: '// Sem JavaScript para este componente estático'
+      },
+      // Outros componentes teriam definições similares
+    };
+    
+    // Abrir modal de preview
+    previewButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const componentId = button.dataset.componentId;
+        const componentCard = button.closest('.component-card');
+        const componentName = componentCard.querySelector('.component-name').textContent;
+        
+        // Atualizar título
+        previewTitle.textContent = `Visualização: ${componentName}`;
+        
+        // Dados do componente (simulado)
+        const preview = componentPreviews[componentId] || {
+          name: componentName,
+          html: `<div class="example-component">
+            <h2>${componentName}</h2>
+            <p>Conteúdo de exemplo do componente.</p>
+          </div>`,
+          css: `.example-component {
+            padding: 2rem;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            text-align: center;
+          }`,
+          js: `// JavaScript do componente ${componentName}
+          console.log('Componente carregado: ${componentName}');`
+        };
+        
+        // Carregar código nos painéis
+        document.getElementById('preview-html-code').textContent = preview.html;
+        document.getElementById('preview-css-code').textContent = preview.css;
+        document.getElementById('preview-js-code').textContent = preview.js;
+        
+        // Carregar preview no iframe
+        const iframe = document.getElementById('preview-iframe');
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${preview.name} Preview</title>
+            <style>${preview.css}</style>
+          </head>
+          <body>
+            ${preview.html}
+            <script>/* JS aqui */</script>
+          </body>
+          </html>
+        `);
+        
+        // Adicionar o JavaScript separadamente para evitar problemas com escape
+        try {
+          const jsContent = preview.js || '';
+          if (jsContent.trim()) {
+            const scriptElement = iframeDoc.createElement('script');
+            scriptElement.textContent = jsContent;
+            iframeDoc.body.appendChild(scriptElement);
+          }
+        } catch (e) {
+          console.error('Erro ao adicionar script:', e);
+        }
+        iframeDoc.close();
+        
+        // Mostrar modal
+        previewModal.classList.add('active');
+      });
+    });
+    
+    // Fechar modal
+    closePreviewButton.addEventListener('click', () => {
+      previewModal.classList.remove('active');
+    });
+    
+    // Fechar modal ao clicar fora
+    previewModal.addEventListener('click', (e) => {
+      if (e.target === previewModal) {
+        previewModal.classList.remove('active');
+      }
+    });
+    
+    // Tabs do modal
+    previewTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        
+        // Atualizar tabs ativas
+        previewTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Atualizar painéis ativos
+        previewPanels.forEach(panel => panel.classList.remove('active'));
+        document.getElementById(`preview-panel-${tabName}`).classList.add('active');
+      });
+    });
+    
+    // Confirmar exclusão de componente
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const componentId = button.dataset.componentId;
+        const componentCard = button.closest('.component-card');
+        const componentName = componentCard.querySelector('.component-name').textContent;
+        
+        if (confirm(`Tem certeza que deseja excluir o componente "${componentName}"? Esta ação não pode ser desfeita.`)) {
+          // Aqui você enviaria uma requisição para a API para excluir o componente
+          console.log(`Excluindo componente ${componentId}: ${componentName}`);
+          componentCard.remove();
+          
+          // Verificar se há componentes visíveis
+          applyFilters();
+        }
+      });
+    });
+    
+    // Modal de importação
+    const importButton = document.getElementById('import-component');
+    
+    importButton.addEventListener('click', () => {
+      alert('Funcionalidade de importação de componente será implementada em uma versão futura.');
+    });
+  });
+</script>

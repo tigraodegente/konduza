@@ -1,0 +1,170 @@
+{
+  "type": "themes",
+  "operation": "create",
+  "data": {
+    "name": "Meu Primeiro Tema",
+    "description": "Tema inicial criado para o Konduza",
+    "version": "1.0.0",
+    "status": "draft",
+    "validationStatus": "pending",
+    "isSystem": false,
+    
+    "templates": [
+      {
+        "name": "Página Inicial",
+        "key": "home",
+        "description": "Template para a página inicial do site",
+        "defaultTemplate": true
+      },
+      {
+        "name": "Página de Conteúdo",
+        "key": "content",
+        "description": "Template para páginas regulares de conteúdo",
+        "defaultTemplate": false
+      }
+    ],
+    
+    "mainStyles": ":root {\n  --color-primary: #3498db;\n  --color-secondary: #2ecc71;\n  --color-text: #333333;\n  --color-background: #f9f9f9;\n  --color-accent: #e74c3c;\n  \n  --font-heading: 'Poppins', sans-serif;\n  --font-body: 'Open Sans', sans-serif;\n  \n  --spacing-small: 0.5rem;\n  --spacing-medium: 1rem;\n  --spacing-large: 2rem;\n}\n\nbody {\n  font-family: var(--font-body);\n  color: var(--color-text);\n  background-color: var(--color-background);\n  line-height: 1.6;\n  margin: 0;\n  padding: 0;\n}\n\nh1, h2, h3, h4, h5, h6 {\n  font-family: var(--font-heading);\n  font-weight: 700;\n  line-height: 1.2;\n  margin-top: 0;\n}\n\na {\n  color: var(--color-primary);\n  text-decoration: none;\n}\n\na:hover {\n  text-decoration: underline;\n}\n\n.container {\n  max-width: 1200px;\n  margin: 0 auto;\n  padding: 0 var(--spacing-medium);\n}\n\n.btn {\n  display: inline-block;\n  background-color: var(--color-primary);\n  color: white;\n  padding: 0.75rem 1.5rem;\n  border-radius: 4px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background-color 0.3s;\n}\n\n.btn:hover {\n  background-color: #2980b9;\n  text-decoration: none;\n}\n\n.btn-secondary {\n  background-color: var(--color-secondary);\n}\n\n.btn-secondary:hover {\n  background-color: #27ae60;\n}",
+    
+    "layouts": [
+      {
+        "name": "Layout Base",
+        "key": "base",
+        "isDefault": true,
+        "template": "---\n// Layout Base\n---\n<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>{title}</title>\n  <link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans:wght@400;600&display=swap\">\n  <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css\">\n  <style>{themeCSS}</style>\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"container\">\n      <div class=\"header-content\">\n        <div class=\"logo\">\n          <a href=\"/\">{siteName}</a>\n        </div>\n        <nav class=\"main-nav\">\n          <ul>\n            {#each navigation as item}\n              <li><a href={item.url}>{item.label}</a></li>\n            {/each}\n          </ul>\n        </nav>\n      </div>\n    </div>\n  </header>\n  \n  <main>\n    <slot />\n  </main>\n  \n  <footer class=\"site-footer\">\n    <div class=\"container\">\n      <div class=\"footer-content\">\n        <p>&copy; {new Date().getFullYear()} {siteName}. Todos os direitos reservados.</p>\n      </div>\n    </div>\n  </footer>\n  \n  <script src=\"https://cdn.tailwindcss.com\"></script>\n  <script>{themeJS}</script>\n</body>\n</html>"
+      },
+      {
+        "name": "Layout Home",
+        "key": "home",
+        "isDefault": false,
+        "template": "---\nlayout: 'base'\n---\n<div class=\"home-page\">\n  <slot />\n</div>"
+      }
+    ],
+    
+    "components": [
+      {
+        "name": "Hero",
+        "key": "hero",
+        "description": "Banner/Hero para páginas de destaque",
+        "category": "content",
+        "template": "---\n// Hero Component\nconst { title, subtitle, buttonText, buttonUrl, backgroundImage } = Astro.props;\n---\n<section class=\"hero\" style={backgroundImage ? `background-image: url(${backgroundImage})` : ''}>\n  <div class=\"container\">\n    <div class=\"hero-content\">\n      <h1>{title}</h1>\n      {subtitle && <p class=\"subtitle\">{subtitle}</p>}\n      {buttonText && buttonUrl && \n        <a href={buttonUrl} class=\"btn\">{buttonText}</a>\n      }\n    </div>\n  </div>\n</section>",
+        "styles": ".hero {\n  background-color: var(--color-primary);\n  color: white;\n  padding: 5rem 0;\n  background-size: cover;\n  background-position: center;\n  position: relative;\n}\n\n.hero::before {\n  content: '';\n  position: absolute;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background: rgba(0, 0, 0, 0.4);\n}\n\n.hero-content {\n  position: relative;\n  max-width: 800px;\n  margin: 0 auto;\n  text-align: center;\n  z-index: 1;\n}\n\n.hero h1 {\n  font-size: 3rem;\n  margin-bottom: 1rem;\n}\n\n.hero .subtitle {\n  font-size: 1.25rem;\n  margin-bottom: 2rem;\n  opacity: 0.9;\n}\n\n.hero .btn {\n  background-color: var(--color-accent);\n  font-size: 1.1rem;\n}\n\n.hero .btn:hover {\n  background-color: #c0392b;\n}",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string", "title": "Título" },
+            "subtitle": { "type": "string", "title": "Subtítulo" },
+            "buttonText": { "type": "string", "title": "Texto do Botão" },
+            "buttonUrl": { "type": "string", "title": "URL do Botão" },
+            "backgroundImage": { "type": "string", "title": "Imagem de Fundo" }
+          },
+          "required": ["title"]
+        }
+      },
+      {
+        "name": "Bloco de Conteúdo",
+        "key": "content-block",
+        "description": "Bloco simples de conteúdo com título e texto",
+        "category": "content",
+        "template": "---\n// Content Block Component\nconst { title, content, alignment = 'left' } = Astro.props;\n---\n<section class=\"content-block\">\n  <div class=\"container\">\n    <div class=\"content-block-inner\" data-alignment={alignment}>\n      <h2>{title}</h2>\n      <div class=\"content\">\n        {content}\n      </div>\n    </div>\n  </div>\n</section>",
+        "styles": ".content-block {\n  padding: 4rem 0;\n}\n\n.content-block-inner {\n  max-width: 800px;\n  margin: 0 auto;\n}\n\n.content-block-inner[data-alignment=\"center\"] {\n  text-align: center;\n}\n\n.content-block-inner[data-alignment=\"right\"] {\n  text-align: right;\n}\n\n.content-block h2 {\n  color: var(--color-primary);\n  margin-bottom: 1.5rem;\n  font-size: 2.25rem;\n}\n\n.content-block .content {\n  font-size: 1.1rem;\n  line-height: 1.7;\n}",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string", "title": "Título" },
+            "content": { "type": "string", "title": "Conteúdo", "format": "html" },
+            "alignment": {
+              "type": "string",
+              "title": "Alinhamento",
+              "enum": ["left", "center", "right"],
+              "default": "left"
+            }
+          },
+          "required": ["title", "content"]
+        }
+      }
+    ],
+    
+    "globalScripts": "// Script global do tema\ndocument.addEventListener('DOMContentLoaded', function() {\n  console.log('Tema inicializado com sucesso!');\n});",
+    
+    "settings": {
+      "colors": [
+        {
+          "name": "Primária",
+          "key": "primary",
+          "value": "#3498db"
+        },
+        {
+          "name": "Secundária",
+          "key": "secondary",
+          "value": "#2ecc71"
+        },
+        {
+          "name": "Texto",
+          "key": "text",
+          "value": "#333333"
+        },
+        {
+          "name": "Fundo",
+          "key": "background",
+          "value": "#f9f9f9"
+        },
+        {
+          "name": "Destaque",
+          "key": "accent",
+          "value": "#e74c3c"
+        }
+      ],
+      "fonts": [
+        {
+          "name": "Cabeçalho",
+          "key": "heading",
+          "family": "Poppins, sans-serif",
+          "url": "https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"
+        },
+        {
+          "name": "Corpo",
+          "key": "body",
+          "family": "Open Sans, sans-serif",
+          "url": "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap"
+        }
+      ],
+      "spacing": [
+        {
+          "name": "Pequeno",
+          "key": "small",
+          "value": "0.5rem"
+        },
+        {
+          "name": "Médio",
+          "key": "medium",
+          "value": "1rem"
+        },
+        {
+          "name": "Grande",
+          "key": "large",
+          "value": "2rem"
+        }
+      ]
+    },
+    
+    "dependencies": [
+      {
+        "name": "TailwindCSS",
+        "version": "3.0.0",
+        "type": "css",
+        "url": "https://cdn.tailwindcss.com"
+      },
+      {
+        "name": "Font Awesome",
+        "version": "6.0.0",
+        "type": "css",
+        "url": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      }
+    ]
+  },
+  "options": {
+    "skipValidation": false,
+    "overrideExisting": true
+  }
+}

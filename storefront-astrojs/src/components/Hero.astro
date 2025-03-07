@@ -1,0 +1,208 @@
+---
+/**
+ * Componente Hero
+ * 
+ * Este componente renderiza uma seção hero com título,
+ * subtítulo, imagem de fundo e botões de ação.
+ */
+
+const {
+  title = 'Título Principal',
+  subtitle = 'Subtítulo ou slogan da página',
+  description = '',
+  primaryButtonText = '',
+  primaryButtonLink = '#',
+  secondaryButtonText = '',
+  secondaryButtonLink = '#',
+  backgroundImage = '',
+  backgroundColor = '',
+  textColor = 'white',
+  textAlign = 'center',
+  size = 'large', // small, medium, large, full
+  overlayOpacity = 0.5,
+  height = '',
+  id = ''
+} = Astro.props;
+
+// Determinar classes de tamanho
+const sizeClass = `hero-${size}`;
+
+// Determinar estilos inline
+const bgColor = backgroundColor || 'var(--color-primary)';
+const heroStyles = {
+  backgroundColor: bgColor,
+  color: textColor,
+  textAlign,
+  backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  height: height || (size === 'full' ? '100vh' : 'auto')
+};
+
+// Converter objeto de estilos para string
+const styleString = Object.entries(heroStyles)
+  .map(([key, value]) => `${key}:${value}`)
+  .join(';');
+---
+
+<section class={`hero ${sizeClass}`} style={styleString} id={id}>
+  {backgroundImage && (
+    <div 
+      class="hero-overlay" 
+      style={`background-color: rgba(0, 0, 0, ${overlayOpacity})`}
+    ></div>
+  )}
+  
+  <div class="hero-content">
+    <div class="container">
+      <h1 class="hero-title">{title}</h1>
+      
+      {subtitle && <p class="hero-subtitle">{subtitle}</p>}
+      
+      {description && <div class="hero-description">{description}</div>}
+      
+      {(primaryButtonText || secondaryButtonText) && (
+        <div class="hero-buttons">
+          {primaryButtonText && (
+            <a href={primaryButtonLink} class="btn btn-primary">{primaryButtonText}</a>
+          )}
+          
+          {secondaryButtonText && (
+            <a href={secondaryButtonLink} class="btn btn-secondary">{secondaryButtonText}</a>
+          )}
+        </div>
+      )}
+      
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl) 0;
+    overflow: hidden;
+  }
+  
+  .hero-small {
+    padding: var(--spacing-lg) 0;
+    min-height: 200px;
+  }
+  
+  .hero-medium {
+    padding: var(--spacing-xl) 0;
+    min-height: 400px;
+  }
+  
+  .hero-large {
+    padding: calc(var(--spacing-xl) * 2) 0;
+    min-height: 600px;
+  }
+  
+  .hero-full {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+  
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+  
+  .hero-title {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-md);
+    font-weight: bold;
+  }
+  
+  .hero-subtitle {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.9;
+  }
+  
+  .hero-description {
+    font-size: var(--font-size-lg);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.8;
+  }
+  
+  .hero-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  /* Adaptação para alinhamento de texto */
+  [style*="text-align:left"] .hero-buttons,
+  [style*="text-align: left"] .hero-buttons {
+    justify-content: flex-start;
+  }
+  
+  [style*="text-align:right"] .hero-buttons,
+  [style*="text-align: right"] .hero-buttons {
+    justify-content: flex-end;
+  }
+  
+  [style*="text-align:left"] .hero-description,
+  [style*="text-align: left"] .hero-description,
+  [style*="text-align:right"] .hero-description,
+  [style*="text-align: right"] .hero-description {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: var(--font-size-2xl);
+    }
+    
+    .hero-subtitle {
+      font-size: var(--font-size-lg);
+    }
+    
+    .hero-description {
+      font-size: var(--font-size-base);
+    }
+    
+    .hero-large {
+      min-height: 400px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .hero {
+      padding: var(--spacing-lg) 0;
+    }
+    
+    .hero-buttons {
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+    
+    .hero-buttons .btn {
+      width: 100%;
+    }
+  }
+</style>

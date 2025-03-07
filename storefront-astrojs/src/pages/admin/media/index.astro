@@ -1,0 +1,1665 @@
+---
+// src/pages/admin/media/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// Em um ambiente real, você buscaria esses dados da API
+const mediaFiles = [
+  {
+    id: 'media-1',
+    name: 'banner-principal.jpg',
+    url: '/uploads/banner-principal.jpg',
+    thumbnail: '/admin/thumbnails/img-1.jpg',
+    type: 'image',
+    size: 1250000,
+    dimensions: '1920x1080',
+    uploadedAt: '2025-03-01T10:30:00.000Z',
+    folder: 'Banners'
+  },
+  {
+    id: 'media-2',
+    name: 'logo-empresa.png',
+    url: '/uploads/logo-empresa.png',
+    thumbnail: '/admin/thumbnails/img-2.jpg',
+    type: 'image',
+    size: 350000,
+    dimensions: '600x400',
+    uploadedAt: '2025-02-28T15:45:00.000Z',
+    folder: 'Logos'
+  },
+  {
+    id: 'media-3',
+    name: 'produto-1.jpg',
+    url: '/uploads/produto-1.jpg',
+    thumbnail: '/admin/thumbnails/img-3.jpg',
+    type: 'image',
+    size: 750000,
+    dimensions: '800x800',
+    uploadedAt: '2025-03-05T08:20:00.000Z',
+    folder: 'Produtos'
+  },
+  {
+    id: 'media-4',
+    name: 'catalogo-produtos.pdf',
+    url: '/uploads/catalogo-produtos.pdf',
+    thumbnail: '/admin/thumbnails/pdf.jpg',
+    type: 'document',
+    size: 2500000,
+    dimensions: null,
+    uploadedAt: '2025-02-20T12:15:00.000Z',
+    folder: 'Documentos'
+  },
+  {
+    id: 'media-5',
+    name: 'video-institucional.mp4',
+    url: '/uploads/video-institucional.mp4',
+    thumbnail: '/admin/thumbnails/video.jpg',
+    type: 'video',
+    size: 15000000,
+    dimensions: '1920x1080',
+    uploadedAt: '2025-03-04T09:10:00.000Z',
+    folder: 'Vídeos'
+  },
+  {
+    id: 'media-6',
+    name: 'equipe.jpg',
+    url: '/uploads/equipe.jpg',
+    thumbnail: '/admin/thumbnails/img-4.jpg',
+    type: 'image',
+    size: 980000,
+    dimensions: '1600x900',
+    uploadedAt: '2025-03-02T14:25:00.000Z',
+    folder: 'Equipe'
+  },
+  {
+    id: 'media-7',
+    name: 'apresentacao.pptx',
+    url: '/uploads/apresentacao.pptx',
+    thumbnail: '/admin/thumbnails/ppt.jpg',
+    type: 'document',
+    size: 4200000,
+    dimensions: null,
+    uploadedAt: '2025-02-25T16:40:00.000Z',
+    folder: 'Documentos'
+  }
+];
+
+// Lista de pastas
+const folders = [
+  { id: 'all', name: 'Todos os Arquivos', count: mediaFiles.length },
+  { id: 'Banners', name: 'Banners', count: 1 },
+  { id: 'Logos', name: 'Logos', count: 1 },
+  { id: 'Produtos', name: 'Produtos', count: 1 },
+  { id: 'Documentos', name: 'Documentos', count: 2 },
+  { id: 'Vídeos', name: 'Vídeos', count: 1 },
+  { id: 'Equipe', name: 'Equipe', count: 1 }
+];
+
+// Função para formatar data
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
+// Função para formatar tamanho de arquivo
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+  else return (bytes / 1073741824).toFixed(1) + ' GB';
+}
+
+// Função para obter ícone para cada tipo de arquivo
+function getFileIcon(type) {
+  switch (type) {
+    case 'image':
+      return '🖼️';
+    case 'video':
+      return '🎬';
+    case 'document':
+      return '📄';
+    case 'audio':
+      return '🔊';
+    default:
+      return '📁';
+  }
+}
+---
+
+<AdminLayout title="Biblioteca de Mídia" currentSection="media">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Biblioteca de Mídia</h1>
+      <nav class="breadcrumbs">
+        <a href="/admin">Admin</a> / <a href="/admin/media">Mídia</a>
+      </nav>
+    </div>
+    <div class="page-actions">
+      <button id="upload-btn" class="btn-primary">Upload de Arquivos</button>
+      <button id="create-folder-btn" class="btn-secondary">Nova Pasta</button>
+    </div>
+  </div>
+  
+  <div class="content-container">
+    <div class="media-layout">
+      <!-- Sidebar com pastas -->
+      <div class="media-sidebar">
+        <div class="folder-header">
+          <h3>Pastas</h3>
+          <button class="btn-icon" id="collapse-folders" title="Recolher">↑</button>
+        </div>
+        
+        <ul class="folder-list">
+          {folders.map(folder => (
+            <li class:list={['folder-item', { active: folder.id === 'all' }]} data-folder={folder.id}>
+              <span class="folder-icon">📁</span>
+              <span class="folder-name">{folder.name}</span>
+              <span class="folder-count">{folder.count}</span>
+            </li>
+          ))}
+        </ul>
+        
+        <div class="media-stats">
+          <div class="stat-item">
+            <span class="stat-label">Total de Arquivos:</span>
+            <span class="stat-value">{mediaFiles.length}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Espaço Utilizado:</span>
+            <span class="stat-value">{formatFileSize(mediaFiles.reduce((sum, file) => sum + file.size, 0))}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Área principal de conteúdo -->
+      <div class="media-content">
+        <!-- Barra de ferramentas -->
+        <div class="media-toolbar">
+          <div class="search-box">
+            <input type="text" placeholder="Buscar arquivos..." class="form-input search-input" id="media-search">
+            <button class="search-button">🔍</button>
+          </div>
+          
+          <div class="view-options">
+            <button class="view-option active" data-view="grid">
+              Grid
+            </button>
+            <button class="view-option" data-view="list">
+              Lista
+            </button>
+          </div>
+          
+          <div class="filter-options">
+            <select class="form-select" id="type-filter">
+              <option value="all">Todos os Tipos</option>
+              <option value="image">Imagens</option>
+              <option value="video">Vídeos</option>
+              <option value="document">Documentos</option>
+              <option value="audio">Áudio</option>
+            </select>
+            
+            <select class="form-select" id="sort-filter">
+              <option value="newest">Mais Recentes</option>
+              <option value="oldest">Mais Antigos</option>
+              <option value="name-asc">Nome (A-Z)</option>
+              <option value="name-desc">Nome (Z-A)</option>
+              <option value="size-asc">Tamanho (Menor)</option>
+              <option value="size-desc">Tamanho (Maior)</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Visualização em Grid -->
+        <div class="media-view grid-view active" id="grid-view">
+          <div class="media-grid">
+            {mediaFiles.map(file => (
+              <div class="media-card" data-id={file.id} data-type={file.type} data-folder={file.folder}>
+                <div class="media-preview">
+                  {file.type === 'image' ? (
+                    <img src={file.thumbnail} alt={file.name} loading="lazy">
+                  ) : (
+                    <div class="media-type-icon">{getFileIcon(file.type)}</div>
+                  )}
+                  <div class="media-actions">
+                    <button class="media-action preview-action" data-id={file.id}>Visualizar</button>
+                    <button class="media-action select-action" data-id={file.id}>Selecionar</button>
+                  </div>
+                </div>
+                <div class="media-info">
+                  <div class="media-name" title={file.name}>{file.name}</div>
+                  <div class="media-meta">
+                    <span>{formatFileSize(file.size)}</span>
+                    {file.dimensions && <span>• {file.dimensions}</span>}
+                  </div>
+                </div>
+                <div class="media-context-menu">
+                  <button class="btn-icon context-menu-toggle" data-id={file.id}>⋮</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <!-- Visualização em Lista -->
+        <div class="media-view list-view" id="list-view">
+          <table class="media-table">
+            <thead>
+              <tr>
+                <th width="40px"></th>
+                <th>Nome</th>
+                <th>Tipo</th>
+                <th>Pasta</th>
+                <th>Tamanho</th>
+                <th>Dimensões</th>
+                <th>Data de Upload</th>
+                <th width="80px">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mediaFiles.map(file => (
+                <tr data-id={file.id} data-type={file.type} data-folder={file.folder}>
+                  <td>
+                    <span class="file-icon">{getFileIcon(file.type)}</span>
+                  </td>
+                  <td>
+                    <div class="file-name-cell">
+                      {file.type === 'image' && (
+                        <div class="file-thumbnail">
+                          <img src={file.thumbnail} alt={file.name} width="40" height="40" loading="lazy">
+                        </div>
+                      )}
+                      <span>{file.name}</span>
+                    </div>
+                  </td>
+                  <td>{file.type}</td>
+                  <td>{file.folder}</td>
+                  <td>{formatFileSize(file.size)}</td>
+                  <td>{file.dimensions || '-'}</td>
+                  <td>{formatDate(file.uploadedAt)}</td>
+                  <td class="actions-cell">
+                    <button class="btn-icon preview-action" title="Visualizar" data-id={file.id}>
+                      👁️
+                    </button>
+                    <button class="btn-icon context-menu-toggle" title="Mais ações" data-id={file.id}>
+                      ⋮
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Mensagem "Sem Resultados" -->
+        <div class="no-results" style="display: none;">
+          <div class="no-results-icon">🔍</div>
+          <h3>Nenhum arquivo encontrado</h3>
+          <p>Tente ajustar seus filtros ou faça upload de novos arquivos.</p>
+          <button id="upload-btn-empty" class="btn-primary">Upload de Arquivos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de Upload -->
+  <div class="media-modal" id="upload-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Upload de Arquivos</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" id="file-input" multiple style="display: none;">
+          <div class="upload-placeholder">
+            <div class="upload-icon">📤</div>
+            <h3>Arraste arquivos aqui</h3>
+            <p>ou <button class="upload-browse-btn">escolha arquivos</button> para upload</p>
+          </div>
+          <div class="upload-preview" style="display: none;">
+            <h3>Arquivos selecionados (<span id="file-count">0</span>)</h3>
+            <ul class="upload-files-list" id="upload-files-list"></ul>
+          </div>
+        </div>
+        
+        <div class="upload-options">
+          <div class="form-group">
+            <label class="form-label">Pasta de destino</label>
+            <select class="form-select" id="upload-folder">
+              {folders.filter(f => f.id !== 'all').map(folder => (
+                <option value={folder.id}>{folder.name}</option>
+              ))}
+              <option value="new">Nova pasta...</option>
+            </select>
+          </div>
+          
+          <div class="form-group" id="new-folder-group" style="display: none;">
+            <label class="form-label">Nome da nova pasta</label>
+            <input type="text" class="form-input" id="new-folder-name" placeholder="Ex: Produtos">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-cancel">Cancelar</button>
+        <button class="btn-primary" id="upload-submit">Iniciar Upload</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de Criar Pasta -->
+  <div class="media-modal" id="folder-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Nova Pasta</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Nome da pasta</label>
+          <input type="text" class="form-input" id="folder-name" placeholder="Ex: Banners">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-cancel">Cancelar</button>
+        <button class="btn-primary" id="folder-submit">Criar Pasta</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de Visualização -->
+  <div class="media-modal" id="preview-modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="preview-title">Visualização</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="preview-container" id="preview-container">
+          <!-- O conteúdo será inserido pelo JavaScript -->
+        </div>
+        <div class="preview-info">
+          <div class="preview-props">
+            <div class="preview-prop">
+              <span class="prop-label">Nome:</span>
+              <span class="prop-value" id="preview-name"></span>
+            </div>
+            <div class="preview-prop">
+              <span class="prop-label">Tipo:</span>
+              <span class="prop-value" id="preview-type"></span>
+            </div>
+            <div class="preview-prop">
+              <span class="prop-label">Tamanho:</span>
+              <span class="prop-value" id="preview-size"></span>
+            </div>
+            <div class="preview-prop">
+              <span class="prop-label">Dimensões:</span>
+              <span class="prop-value" id="preview-dimensions"></span>
+            </div>
+            <div class="preview-prop">
+              <span class="prop-label">Data de upload:</span>
+              <span class="prop-value" id="preview-date"></span>
+            </div>
+            <div class="preview-prop">
+              <span class="prop-label">URL:</span>
+              <div class="preview-url">
+                <input type="text" class="form-input" id="preview-url" readonly>
+                <button class="btn-icon" id="copy-url" title="Copiar URL">📋</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-cancel">Fechar</button>
+        <div class="preview-actions">
+          <button class="btn-danger" id="preview-delete">Excluir</button>
+          <button class="btn-primary" id="preview-select">Selecionar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Menu de Contexto -->
+  <div class="context-menu" id="context-menu">
+    <ul>
+      <li data-action="preview"><span class="context-icon">👁️</span> Visualizar</li>
+      <li data-action="select"><span class="context-icon">✓</span> Selecionar</li>
+      <li data-action="rename"><span class="context-icon">✏️</span> Renomear</li>
+      <li data-action="move"><span class="context-icon">📂</span> Mover</li>
+      <li data-action="download"><span class="context-icon">⬇️</span> Download</li>
+      <li class="context-divider"></li>
+      <li data-action="delete" class="context-danger"><span class="context-icon">🗑️</span> Excluir</li>
+    </ul>
+  </div>
+</AdminLayout>
+
+<style>
+  /* Estilos específicos da página de Mídia */
+  .media-layout {
+    display: flex;
+    gap: var(--spacing-lg);
+  }
+  
+  /* Sidebar */
+  .media-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow);
+    padding: var(--spacing-md);
+    height: fit-content;
+  }
+  
+  .folder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .folder-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+  }
+  
+  .folder-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--spacing-lg) 0;
+  }
+  
+  .folder-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    margin-bottom: var(--spacing-xs);
+    transition: background-color var(--transition-speed) ease;
+  }
+  
+  .folder-item:hover {
+    background-color: var(--bg-light);
+  }
+  
+  .folder-item.active {
+    background-color: rgba(79, 70, 229, 0.1);
+    color: var(--primary);
+  }
+  
+  .folder-icon {
+    margin-right: var(--spacing-sm);
+  }
+  
+  .folder-name {
+    flex-grow: 1;
+  }
+  
+  .folder-count {
+    font-size: var(--font-size-sm);
+    color: var(--secondary);
+    background-color: var(--bg-light);
+    border-radius: 12px;
+    padding: 2px 8px;
+  }
+  
+  .media-stats {
+    border-top: 1px solid var(--border-light);
+    padding-top: var(--spacing-md);
+  }
+  
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+  }
+  
+  .stat-label {
+    color: var(--secondary);
+  }
+  
+  /* Conteúdo Principal */
+  .media-content {
+    flex-grow: 1;
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow);
+    padding: var(--spacing-md);
+  }
+  
+  /* Barra de Ferramentas */
+  .media-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    align-items: center;
+  }
+  
+  .search-box {
+    flex-grow: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  
+  .search-input {
+    padding-right: 2.5rem;
+  }
+  
+  .search-button {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .view-options {
+    display: flex;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+  }
+  
+  .view-option {
+    background: white;
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-md);
+    cursor: pointer;
+  }
+  
+  .view-option.active {
+    background-color: var(--primary);
+    color: white;
+  }
+  
+  .filter-options {
+    display: flex;
+    gap: var(--spacing-sm);
+  }
+  
+  /* Visualização em Grid */
+  .media-view {
+    display: none;
+  }
+  
+  .media-view.active {
+    display: block;
+  }
+  
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+  }
+  
+  .media-card {
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    position: relative;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .media-card:hover {
+    box-shadow: var(--box-shadow);
+    transform: translateY(-2px);
+  }
+  
+  .media-preview {
+    height: 150px;
+    position: relative;
+    background-color: var(--bg-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .media-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .media-type-icon {
+    font-size: 2.5rem;
+    opacity: 0.7;
+  }
+  
+  .media-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    padding: var(--spacing-xs);
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+  }
+  
+  .media-card:hover .media-actions {
+    opacity: 1;
+  }
+  
+  .media-action {
+    flex: 1;
+    text-align: center;
+    padding: var(--spacing-xs);
+    border: none;
+    background: none;
+    color: white;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+  }
+  
+  .media-action:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .media-info {
+    padding: var(--spacing-sm);
+  }
+  
+  .media-name {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .media-meta {
+    font-size: var(--font-size-sm);
+    color: var(--secondary);
+  }
+  
+  .media-context-menu {
+    position: absolute;
+    top: var(--spacing-xs);
+    right: var(--spacing-xs);
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+  }
+  
+  .media-card:hover .media-context-menu {
+    opacity: 1;
+  }
+  
+  /* Visualização em Lista */
+  .media-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .media-table th,
+  .media-table td {
+    padding: var(--spacing-sm);
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .media-table th {
+    font-weight: 500;
+    color: var(--secondary);
+  }
+  
+  .file-icon {
+    font-size: 1.25rem;
+  }
+  
+  .file-name-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+  
+  .file-thumbnail {
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: var(--border-radius-sm);
+  }
+  
+  .file-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Mensagem de "Sem Resultados" */
+  .no-results {
+    text-align: center;
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .no-results-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+  }
+  
+  .no-results h3 {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .no-results p {
+    color: var(--secondary);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  /* Modais */
+  .media-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .media-modal.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .modal-content {
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--box-shadow);
+  }
+  
+  .modal-large {
+    max-width: 900px;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--secondary);
+  }
+  
+  .modal-body {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex-grow: 1;
+  }
+  
+  .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--border-light);
+  }
+  
+  /* Zona de Upload */
+  .upload-zone {
+    border: 2px dashed var(--border-light);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-xl);
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    transition: all var(--transition-speed) ease;
+  }
+  
+  .upload-zone.drag-over {
+    border-color: var(--primary);
+    background-color: rgba(79, 70, 229, 0.05);
+  }
+  
+  .upload-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--secondary);
+  }
+  
+  .upload-browse-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  .upload-files-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--spacing-md) 0 0 0;
+    max-height: 200px;
+    overflow-y: auto;
+    text-align: left;
+  }
+  
+  .upload-file-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .upload-file-icon {
+    margin-right: var(--spacing-sm);
+    font-size: 1.25rem;
+  }
+  
+  .upload-file-info {
+    flex-grow: 1;
+    overflow: hidden;
+  }
+  
+  .upload-file-name {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .upload-file-meta {
+    font-size: var(--font-size-sm);
+    color: var(--secondary);
+  }
+  
+  .upload-file-remove {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 1.25rem;
+  }
+  
+  /* Preview Modal */
+  .preview-container {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-light);
+    border-radius: var(--border-radius-sm);
+  }
+  
+  .preview-container img,
+  .preview-container video {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: var(--border-radius-sm);
+  }
+  
+  .preview-info {
+    display: flex;
+    gap: var(--spacing-lg);
+  }
+  
+  .preview-props {
+    flex-grow: 1;
+  }
+  
+  .preview-prop {
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+  }
+  
+  .prop-label {
+    width: 120px;
+    color: var(--secondary);
+    font-weight: 500;
+  }
+  
+  .preview-url {
+    flex-grow: 1;
+    display: flex;
+    gap: var(--spacing-xs);
+  }
+  
+  .preview-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+  }
+  
+  /* Menu de Contexto */
+  .context-menu {
+    position: absolute;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--box-shadow);
+    min-width: 180px;
+    z-index: 50;
+    display: none;
+  }
+  
+  .context-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .context-menu li {
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+    display: flex;
+    align-items: center;
+  }
+  
+  .context-menu li:hover {
+    background-color: var(--bg-light);
+  }
+  
+  .context-icon {
+    margin-right: var(--spacing-sm);
+  }
+  
+  .context-divider {
+    height: 1px;
+    background-color: var(--border-light);
+    margin: var(--spacing-xs) 0;
+    padding: 0;
+  }
+  
+  .context-divider:hover {
+    background-color: var(--border-light);
+    cursor: default;
+  }
+  
+  .context-danger {
+    color: var(--danger);
+  }
+  
+  .context-danger:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .media-layout {
+      flex-direction: column;
+    }
+    
+    .media-sidebar {
+      width: 100%;
+    }
+    
+    .media-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .filter-options {
+      flex-direction: column;
+    }
+    
+    .media-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+  }
+</style>
+
+<script>
+  // Script para funcionalidades interativas da biblioteca de mídia
+  document.addEventListener('DOMContentLoaded', () => {
+    // Elementos principais
+    const mediaCards = document.querySelectorAll('.media-card');
+    const mediaRows = document.querySelectorAll('.media-table tr[data-id]');
+    const folderItems = document.querySelectorAll('.folder-item');
+    const searchInput = document.getElementById('media-search');
+    const typeFilter = document.getElementById('type-filter');
+    const sortFilter = document.getElementById('sort-filter');
+    const uploadBtn = document.getElementById('upload-btn');
+    const uploadBtnEmpty = document.getElementById('upload-btn-empty');
+    const createFolderBtn = document.getElementById('create-folder-btn');
+    const noResults = document.querySelector('.no-results');
+    const contextMenu = document.getElementById('context-menu');
+    const viewOptions = document.querySelectorAll('.view-option');
+    const gridView = document.getElementById('grid-view');
+    const listView = document.getElementById('list-view');
+    const collapseFoldersBtn = document.getElementById('collapse-folders');
+    
+    // Modais
+    const uploadModal = document.getElementById('upload-modal');
+    const folderModal = document.getElementById('folder-modal');
+    const previewModal = document.getElementById('preview-modal');
+    const modalCloseButtons = document.querySelectorAll('.modal-close, .modal-cancel');
+    
+    // Elementos específicos do upload
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadBrowseBtn = document.querySelector('.upload-browse-btn');
+    const uploadFolder = document.getElementById('upload-folder');
+    const newFolderGroup = document.getElementById('new-folder-group');
+    const filesList = document.getElementById('upload-files-list');
+    const fileCount = document.getElementById('file-count');
+    const uploadPlaceholder = document.querySelector('.upload-placeholder');
+    const uploadPreview = document.querySelector('.upload-preview');
+    const uploadSubmit = document.getElementById('upload-submit');
+    
+    // Elementos específicos da criação de pasta
+    const folderNameInput = document.getElementById('folder-name');
+    const folderSubmit = document.getElementById('folder-submit');
+    
+    // Elementos específicos da visualização
+    const previewContainer = document.getElementById('preview-container');
+    const previewTitle = document.getElementById('preview-title');
+    const previewName = document.getElementById('preview-name');
+    const previewType = document.getElementById('preview-type');
+    const previewSize = document.getElementById('preview-size');
+    const previewDimensions = document.getElementById('preview-dimensions');
+    const previewDate = document.getElementById('preview-date');
+    const previewUrl = document.getElementById('preview-url');
+    const copyUrlBtn = document.getElementById('copy-url');
+    const previewDeleteBtn = document.getElementById('preview-delete');
+    const previewSelectBtn = document.getElementById('preview-select');
+    
+    // Dados de arquivos em formato acessível para o JavaScript
+    const mediaData = [
+      {
+        id: 'media-1',
+        name: 'banner-principal.jpg',
+        url: '/uploads/banner-principal.jpg',
+        thumbnail: '/admin/thumbnails/img-1.jpg',
+        type: 'image',
+        size: 1250000,
+        dimensions: '1920x1080',
+        uploadedAt: '2025-03-01T10:30:00.000Z',
+        folder: 'Banners'
+      },
+      {
+        id: 'media-2',
+        name: 'logo-empresa.png',
+        url: '/uploads/logo-empresa.png',
+        thumbnail: '/admin/thumbnails/img-2.jpg',
+        type: 'image',
+        size: 350000,
+        dimensions: '600x400',
+        uploadedAt: '2025-02-28T15:45:00.000Z',
+        folder: 'Logos'
+      },
+      {
+        id: 'media-3',
+        name: 'produto-1.jpg',
+        url: '/uploads/produto-1.jpg',
+        thumbnail: '/admin/thumbnails/img-3.jpg',
+        type: 'image',
+        size: 750000,
+        dimensions: '800x800',
+        uploadedAt: '2025-03-05T08:20:00.000Z',
+        folder: 'Produtos'
+      },
+      {
+        id: 'media-4',
+        name: 'catalogo-produtos.pdf',
+        url: '/uploads/catalogo-produtos.pdf',
+        thumbnail: '/admin/thumbnails/pdf.jpg',
+        type: 'document',
+        size: 2500000,
+        dimensions: null,
+        uploadedAt: '2025-02-20T12:15:00.000Z',
+        folder: 'Documentos'
+      },
+      {
+        id: 'media-5',
+        name: 'video-institucional.mp4',
+        url: '/uploads/video-institucional.mp4',
+        thumbnail: '/admin/thumbnails/video.jpg',
+        type: 'video',
+        size: 15000000,
+        dimensions: '1920x1080',
+        uploadedAt: '2025-03-04T09:10:00.000Z',
+        folder: 'Vídeos'
+      },
+      {
+        id: 'media-6',
+        name: 'equipe.jpg',
+        url: '/uploads/equipe.jpg',
+        thumbnail: '/admin/thumbnails/img-4.jpg',
+        type: 'image',
+        size: 980000,
+        dimensions: '1600x900',
+        uploadedAt: '2025-03-02T14:25:00.000Z',
+        folder: 'Equipe'
+      },
+      {
+        id: 'media-7',
+        name: 'apresentacao.pptx',
+        url: '/uploads/apresentacao.pptx',
+        thumbnail: '/admin/thumbnails/ppt.jpg',
+        type: 'document',
+        size: 4200000,
+        dimensions: null,
+        uploadedAt: '2025-02-25T16:40:00.000Z',
+        folder: 'Documentos'
+      }
+    ];
+    
+    // Funções Utilitárias
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+      else return (bytes / 1073741824).toFixed(1) + ' GB';
+    }
+    
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    }
+    
+    function getFileIcon(type) {
+      switch (type) {
+        case 'image': return '🖼️';
+        case 'video': return '🎬';
+        case 'document': return '📄';
+        case 'audio': return '🔊';
+        default: return '📁';
+      }
+    }
+    
+    // Função para filtrar os arquivos
+    function applyFilters() {
+      const searchValue = searchInput.value.toLowerCase();
+      const typeValue = typeFilter.value;
+      const selectedFolder = document.querySelector('.folder-item.active').dataset.folder;
+      
+      let visibleCount = 0;
+      
+      // Função para verificar se um arquivo corresponde aos filtros
+      function matchesFilter(file) {
+        const nameMatch = file.dataset.id && mediaData
+          .find(m => m.id === file.dataset.id)?.name.toLowerCase().includes(searchValue);
+        
+        const typeMatch = typeValue === 'all' || file.dataset.type === typeValue;
+        const folderMatch = selectedFolder === 'all' || file.dataset.folder === selectedFolder;
+        
+        return nameMatch && typeMatch && folderMatch;
+      }
+      
+      // Aplicar à visualização em grid
+      mediaCards.forEach(card => {
+        const isVisible = matchesFilter(card);
+        card.style.display = isVisible ? '' : 'none';
+        if (isVisible) visibleCount++;
+      });
+      
+      // Aplicar à visualização em lista
+      mediaRows.forEach(row => {
+        const isVisible = matchesFilter(row);
+        row.style.display = isVisible ? '' : 'none';
+      });
+      
+      // Mostrar mensagem se não houver resultados
+      noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+    
+    // Função para ordenar os arquivos
+    function sortFiles() {
+      const sortValue = sortFilter.value;
+      const gridContainer = document.querySelector('.media-grid');
+      const tableBody = document.querySelector('.media-table tbody');
+      
+      // Converter NodeLists para arrays
+      const cardArray = Array.from(mediaCards);
+      const rowArray = Array.from(mediaRows);
+      
+      // Função para comparar arquivos
+      function compareFiles(a, b) {
+        const fileA = mediaData.find(m => m.id === a.dataset.id);
+        const fileB = mediaData.find(m => m.id === b.dataset.id);
+        
+        if (!fileA || !fileB) return 0;
+        
+        switch (sortValue) {
+          case 'newest':
+            return new Date(fileB.uploadedAt) - new Date(fileA.uploadedAt);
+          case 'oldest':
+            return new Date(fileA.uploadedAt) - new Date(fileB.uploadedAt);
+          case 'name-asc':
+            return fileA.name.localeCompare(fileB.name);
+          case 'name-desc':
+            return fileB.name.localeCompare(fileA.name);
+          case 'size-asc':
+            return fileA.size - fileB.size;
+          case 'size-desc':
+            return fileB.size - fileA.size;
+          default:
+            return 0;
+        }
+      }
+      
+      // Ordenar e reorganizar os elementos no DOM
+      cardArray.sort(compareFiles);
+      rowArray.sort(compareFiles);
+      
+      // Reorganizar os cards
+      cardArray.forEach(card => {
+        gridContainer.appendChild(card);
+      });
+      
+      // Reorganizar as linhas da tabela
+      rowArray.forEach(row => {
+        tableBody.appendChild(row);
+      });
+    }
+    
+    // Função para lidar com o upload de arquivos
+    function handleFilesSelection(files) {
+      const fileArray = Array.from(files);
+      
+      // Atualizar contagem
+      fileCount.textContent = fileArray.length;
+      
+      // Limpar lista existente
+      filesList.innerHTML = '';
+      
+      // Criar itens para cada arquivo
+      fileArray.forEach(file => {
+        // Determinar o tipo de arquivo
+        let type = 'document';
+        if (file.type.startsWith('image/')) type = 'image';
+        else if (file.type.startsWith('video/')) type = 'video';
+        else if (file.type.startsWith('audio/')) type = 'audio';
+        
+        // Criar elemento de lista
+        const item = document.createElement('li');
+        item.className = 'upload-file-item';
+        item.innerHTML = `
+          <span class="upload-file-icon">${getFileIcon(type)}</span>
+          <div class="upload-file-info">
+            <div class="upload-file-name">${file.name}</div>
+            <div class="upload-file-meta">${formatFileSize(file.size)}</div>
+          </div>
+          <button class="upload-file-remove" data-name="${file.name}">&times;</button>
+        `;
+        
+        filesList.appendChild(item);
+      });
+      
+      // Mostrar preview e esconder placeholder
+      uploadPlaceholder.style.display = 'none';
+      uploadPreview.style.display = 'block';
+      
+      // Adicionar event listeners para botões de remoção
+      document.querySelectorAll('.upload-file-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const fileName = btn.dataset.name;
+          
+          // Remover da interface
+          btn.closest('.upload-file-item').remove();
+          
+          // Atualizar contagem
+          const newCount = filesList.children.length;
+          fileCount.textContent = newCount;
+          
+          // Se não houver mais arquivos, mostrar placeholder
+          if (newCount === 0) {
+            uploadPlaceholder.style.display = 'block';
+            uploadPreview.style.display = 'none';
+          }
+        });
+      });
+    }
+    
+    // Função para abrir o modal de visualização
+    function openPreviewModal(fileId) {
+      const file = mediaData.find(m => m.id === fileId);
+      if (!file) return;
+      
+      // Atualizar título
+      previewTitle.textContent = file.name;
+      
+      // Atualizar informações
+      previewName.textContent = file.name;
+      previewType.textContent = file.type;
+      previewSize.textContent = formatFileSize(file.size);
+      previewDimensions.textContent = file.dimensions || 'N/A';
+      previewDate.textContent = formatDate(file.uploadedAt);
+      previewUrl.value = file.url;
+      
+      // Criar preview baseado no tipo de arquivo
+      let previewHTML = '';
+      
+      switch (file.type) {
+        case 'image':
+          previewHTML = `<img src="${file.url || file.thumbnail}" alt="${file.name}">`;
+          break;
+        case 'video':
+          previewHTML = `
+            <video controls>
+              <source src="${file.url}" type="video/mp4">
+              Seu navegador não suporta vídeos.
+            </video>
+          `;
+          break;
+        case 'document':
+          previewHTML = `
+            <div class="document-preview">
+              <div class="document-icon">${getFileIcon(file.type)}</div>
+              <div class="document-name">${file.name}</div>
+              <a href="${file.url}" target="_blank" class="btn-primary">Abrir Documento</a>
+            </div>
+          `;
+          break;
+        default:
+          previewHTML = `
+            <div class="file-preview">
+              <div class="file-icon">${getFileIcon(file.type)}</div>
+              <div class="file-name">${file.name}</div>
+            </div>
+          `;
+      }
+      
+      previewContainer.innerHTML = previewHTML;
+      
+      // Abrir o modal
+      previewModal.classList.add('active');
+    }
+    
+    // Event Listeners
+    
+    // Filtros e Busca
+    searchInput.addEventListener('input', applyFilters);
+    typeFilter.addEventListener('change', applyFilters);
+    
+    // Ordenação
+    sortFilter.addEventListener('change', sortFiles);
+    
+    // Alternar entre visualizações Grid e Lista
+    viewOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        // Atualizar botões
+        viewOptions.forEach(btn => btn.classList.remove('active'));
+        option.classList.add('active');
+        
+        // Mostrar visualização selecionada
+        const viewType = option.dataset.view;
+        
+        if (viewType === 'grid') {
+          gridView.classList.add('active');
+          listView.classList.remove('active');
+        } else {
+          gridView.classList.remove('active');
+          listView.classList.add('active');
+        }
+      });
+    });
+    
+    // Filtro de Pastas
+    folderItems.forEach(folder => {
+      folder.addEventListener('click', () => {
+        // Atualizar pasta ativa
+        folderItems.forEach(f => f.classList.remove('active'));
+        folder.classList.add('active');
+        
+        // Aplicar filtros
+        applyFilters();
+      });
+    });
+    
+    // Recolher/Expandir Pastas
+    let foldersCollapsed = false;
+    collapseFoldersBtn.addEventListener('click', () => {
+      const folderList = document.querySelector('.folder-list');
+      const mediaStats = document.querySelector('.media-stats');
+      
+      foldersCollapsed = !foldersCollapsed;
+      
+      if (foldersCollapsed) {
+        folderList.style.display = 'none';
+        mediaStats.style.display = 'none';
+        collapseFoldersBtn.textContent = '↓';
+        collapseFoldersBtn.title = 'Expandir';
+      } else {
+        folderList.style.display = '';
+        mediaStats.style.display = '';
+        collapseFoldersBtn.textContent = '↑';
+        collapseFoldersBtn.title = 'Recolher';
+      }
+    });
+    
+    // Modais
+    uploadBtn.addEventListener('click', () => {
+      // Resetar o modal
+      fileInput.value = '';
+      uploadPlaceholder.style.display = 'block';
+      uploadPreview.style.display = 'none';
+      filesList.innerHTML = '';
+      uploadFolder.value = folders[1].id;
+      newFolderGroup.style.display = 'none';
+      
+      // Abrir o modal
+      uploadModal.classList.add('active');
+    });
+    
+    uploadBtnEmpty.addEventListener('click', () => uploadBtn.click());
+    
+    createFolderBtn.addEventListener('click', () => {
+      // Resetar o modal
+      folderNameInput.value = '';
+      
+      // Abrir o modal
+      folderModal.classList.add('active');
+    });
+    
+    // Fechar Modais
+    modalCloseButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        uploadModal.classList.remove('active');
+        folderModal.classList.remove('active');
+        previewModal.classList.remove('active');
+      });
+    });
+    
+    // Ações de Upload
+    uploadBrowseBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', () => {
+      handleFilesSelection(fileInput.files);
+    });
+    
+    // Arrastar e soltar arquivos
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('drag-over');
+    });
+    
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('drag-over');
+    });
+    
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('drag-over');
+      
+      if (e.dataTransfer.files.length > 0) {
+        handleFilesSelection(e.dataTransfer.files);
+      }
+    });
+    
+    // Mostrar/esconder campo de nova pasta
+    uploadFolder.addEventListener('change', () => {
+      newFolderGroup.style.display = uploadFolder.value === 'new' ? 'block' : 'none';
+    });
+    
+    // Simulação de Upload
+    uploadSubmit.addEventListener('click', () => {
+      const fileCount = filesList.children.length;
+      
+      if (fileCount === 0) {
+        alert('Por favor, selecione pelo menos um arquivo para upload.');
+        return;
+      }
+      
+      // Simulação de upload
+      alert(`Upload de ${fileCount} arquivo(s) iniciado com sucesso.`);
+      
+      // Fechar o modal
+      uploadModal.classList.remove('active');
+    });
+    
+    // Simulação de criação de pasta
+    folderSubmit.addEventListener('click', () => {
+      const folderName = folderNameInput.value.trim();
+      
+      if (!folderName) {
+        alert('Por favor, insira um nome para a pasta.');
+        return;
+      }
+      
+      // Simulação de criação de pasta
+      alert(`Pasta "${folderName}" criada com sucesso.`);
+      
+      // Fechar o modal
+      folderModal.classList.remove('active');
+    });
+    
+    // Botões de visualização
+    document.querySelectorAll('.preview-action').forEach(button => {
+      button.addEventListener('click', () => {
+        const fileId = button.dataset.id;
+        openPreviewModal(fileId);
+      });
+    });
+    
+    // Copiar URL
+    copyUrlBtn.addEventListener('click', () => {
+      previewUrl.select();
+      document.execCommand('copy');
+      
+      // Feedback visual
+      copyUrlBtn.textContent = '✓';
+      setTimeout(() => {
+        copyUrlBtn.textContent = '📋';
+      }, 1500);
+    });
+    
+    // Simulação de exclusão
+    previewDeleteBtn.addEventListener('click', () => {
+      const fileName = previewName.textContent;
+      
+      if (confirm(`Tem certeza que deseja excluir "${fileName}"? Esta ação não pode ser desfeita.`)) {
+        alert(`Arquivo "${fileName}" excluído com sucesso.`);
+        previewModal.classList.remove('active');
+      }
+    });
+    
+    // Simulação de seleção
+    previewSelectBtn.addEventListener('click', () => {
+      const fileName = previewName.textContent;
+      const fileUrl = previewUrl.value;
+      
+      alert(`Arquivo "${fileName}" selecionado: ${fileUrl}`);
+      previewModal.classList.remove('active');
+    });
+    
+    // Menu de Contexto
+    document.querySelectorAll('.context-menu-toggle').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Posicionar menu de contexto
+        const rect = button.getBoundingClientRect();
+        contextMenu.style.top = `${rect.bottom + 5}px`;
+        contextMenu.style.left = `${rect.left - 150}px`;
+        
+        // Armazenar ID do arquivo
+        contextMenu.dataset.fileId = button.dataset.id;
+        
+        // Mostrar menu
+        contextMenu.style.display = 'block';
+      });
+    });
+    
+    // Fechar menu de contexto ao clicar fora
+    document.addEventListener('click', () => {
+      contextMenu.style.display = 'none';
+    });
+    
+    // Ações do menu de contexto
+    contextMenu.querySelectorAll('li[data-action]').forEach(item => {
+      item.addEventListener('click', () => {
+        const action = item.dataset.action;
+        const fileId = contextMenu.dataset.fileId;
+        const file = mediaData.find(m => m.id === fileId);
+        
+        if (!file) return;
+        
+        switch (action) {
+          case 'preview':
+            openPreviewModal(fileId);
+            break;
+          case 'select':
+            alert(`Arquivo "${file.name}" selecionado: ${file.url}`);
+            break;
+          case 'rename':
+            const newName = prompt('Insira o novo nome:', file.name);
+            if (newName && newName !== file.name) {
+              alert(`Arquivo renomeado para "${newName}".`);
+            }
+            break;
+          case 'move':
+            alert('Funcionalidade de mover será implementada em uma versão futura.');
+            break;
+          case 'download':
+            alert(`Download do arquivo "${file.name}" iniciado.`);
+            break;
+          case 'delete':
+            if (confirm(`Tem certeza que deseja excluir "${file.name}"? Esta ação não pode ser desfeita.`)) {
+              alert(`Arquivo "${file.name}" excluído com sucesso.`);
+            }
+            break;
+        }
+        
+        // Fechar menu
+        contextMenu.style.display = 'none';
+      });
+    });
+    
+    // Inicialização
+    sortFiles(); // Ordenar arquivos inicialmente
+  });
+</script>

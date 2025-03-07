@@ -1,0 +1,155 @@
+/**
+ * Estilos personalizados para o Admin do Konduza
+ */
+
+/* Variáveis de cor */
+:root {
+  --konduza-primary: #7752FE;
+  --konduza-primary-light: #9D7FFF;
+  --konduza-primary-dark: #5232CB;
+  --konduza-secondary: #2EC4B6;
+  --konduza-error: #E71D36;
+  --konduza-warning: #FF9F1C;
+  --konduza-success: #2EC4B6;
+  --konduza-background: #F8F9FA;
+  --konduza-text: #212529;
+  --konduza-text-light: #6C757D;
+}
+
+/* Estilização do logo */
+.nav__logo-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav__logo {
+  max-width: 150px;
+}
+
+/* Customização de cores nos elementos principais */
+.btn--style-primary {
+  background-color: var(--konduza-primary);
+}
+
+.btn--style-primary:hover {
+  background-color: var(--konduza-primary-dark);
+}
+
+.pill--style-success {
+  background-color: var(--konduza-success);
+}
+
+.pill--style-warning {
+  background-color: var(--konduza-warning);
+}
+
+.pill--style-error {
+  background-color: var(--konduza-error);
+}
+
+/* Melhoria em tooltips e mensagens */
+.tooltip {
+  background-color: var(--konduza-primary);
+  color: white;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+/* Status de validação */
+.status-valid {
+  background-color: var(--konduza-success);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.status-invalid {
+  background-color: var(--konduza-error);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.status-pending {
+  background-color: var(--konduza-warning);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Ajustes para editores de código */
+.code-editor {
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+/* Estilos para cartões e seções */
+.card {
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Melhorias no layout responsivo */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 12px;
+  }
+  
+  .form-field {
+    margin-bottom: 12px;
+  }
+}
+
+/* Seção de documentação (ajuda) */
+.docs-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--konduza-primary);
+  text-decoration: none;
+  margin-top: 8px;
+}
+
+.docs-link svg {
+  margin-right: 4px;
+}
+
+.docs-link:hover {
+  text-decoration: underline;
+}
+
+/* Ícones personalizados */
+.icon--konduza-theme {
+  color: var(--konduza-primary);
+}
+
+.icon--konduza-site {
+  color: var(--konduza-secondary);
+}
+
+.icon--konduza-entity {
+  color: var(--konduza-primary-light);
+}
+
+/* Animações sutis */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.btn--style-success:hover {
+  animation: pulse 0.5s ease-in-out;
+}

@@ -1,0 +1,817 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getAdminSession } from '../../../utils/api.js';
+
+// Verificar autenticação do admin
+const session = await getAdminSession(Astro.request);
+if (!session) {
+  return Astro.redirect('/login?redirect=/admin/themes/importar');
+}
+
+// Dados para o template
+const pageTitle = "Importar Tema";
+
+// Obter a URL base para o API do tema (para o preview)
+const apiBase = import.meta.env.PUBLIC_API_URL || '';
+---
+
+<AdminLayout title={pageTitle} userData={session}>
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">{pageTitle}</h1>
+      <a href="/admin/themes" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded">
+        Voltar para Temas
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Painel de importação -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="mb-4">
+          <p class="text-gray-700 mb-2">
+            Importe um tema no formato JSON. O sistema verificará a estrutura do tema e o importará para o Konduza.
+          </p>
+          <div class="flex space-x-2 mb-4">
+            <button id="btn-exemplo" class="text-blue-600 hover:text-blue-800 text-sm">
+              Carregar exemplo
+            </button>
+            <span class="text-gray-400">|</span>
+            <button id="btn-format" class="text-blue-600 hover:text-blue-800 text-sm">
+              Formatar JSON
+            </button>
+            <span class="text-gray-400">|</span>
+            <button id="btn-limpar" class="text-blue-600 hover:text-blue-800 text-sm">
+              Limpar
+            </button>
+          </div>
+        </div>
+
+        <form id="import-form" class="space-y-4">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <label for="json-input" class="block text-sm font-medium text-gray-700">
+                JSON do Tema
+              </label>
+              <div class="flex items-center space-x-2">
+                <label class="text-sm text-blue-600 hover:text-blue-800 cursor-pointer">
+                  <span>Upload de arquivo</span>
+                  <input 
+                    type="file" 
+                    id="file-input" 
+                    accept=".json" 
+                    class="sr-only"
+                  />
+                </label>
+              </div>
+            </div>
+            
+            <div class="relative">
+              <textarea
+                id="json-input"
+                name="json"
+                rows="20"
+                class="w-full p-3 border border-gray-300 rounded-md font-mono text-sm"
+                placeholder='{"type": "themes", "data": { ... }}'
+              ></textarea>
+              <div id="json-line-numbers" class="absolute top-0 left-0 w-8 p-3 font-mono text-xs text-gray-400 select-none"></div>
+            </div>
+            
+            <div id="validation-container" class="mt-2 hidden">
+              <div class="flex items-start">
+                <div id="validation-status" class="flex-shrink-0 mt-0.5"></div>
+                <div class="ml-2">
+                  <p id="validation-message" class="text-sm font-medium"></p>
+                  <ul id="validation-details" class="mt-1 text-xs space-y-1 list-disc pl-5"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <div class="space-x-2">
+              <label class="inline-flex items-center">
+                <input type="checkbox" id="override-existing" class="form-checkbox h-4 w-4 text-blue-600" checked>
+                <span class="ml-2 text-sm text-gray-700">Substituir se existir</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="checkbox" id="skip-validation" class="form-checkbox h-4 w-4 text-blue-600">
+                <span class="ml-2 text-sm text-gray-700">Pular validação</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="checkbox" id="preview-mode" class="form-checkbox h-4 w-4 text-blue-600">
+                <span class="ml-2 text-sm text-gray-700">Modo preview</span>
+              </label>
+            </div>
+            <button
+              type="submit"
+              id="submit-btn"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            >
+              Importar Tema
+            </button>
+          </div>
+        </form>
+
+        <!-- Resultado da importação -->
+        <div id="result-container" class="mt-6 p-4 rounded-md border hidden">
+          <h3 class="font-bold text-lg mb-2" id="result-title">Resultado da Importação</h3>
+          <div id="result-content" class="text-sm"></div>
+        </div>
+      </div>
+
+      <!-- Painel de preview -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">Preview do Tema</h2>
+          <div class="flex space-x-2">
+            <button id="btn-refresh-preview" class="text-sm text-blue-600 hover:text-blue-800">
+              Atualizar
+            </button>
+            <div class="relative inline-block">
+              <button id="btn-viewport" class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                <span id="viewport-label">Desktop</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div id="viewport-dropdown" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <div class="py-1">
+                  <button data-width="100%" data-device="desktop" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Desktop (100%)</button>
+                  <button data-width="1024px" data-device="laptop" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Laptop (1024px)</button>
+                  <button data-width="768px" data-device="tablet" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Tablet (768px)</button>
+                  <button data-width="425px" data-device="mobile" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mobile (425px)</button>
+                </div>
+              </div>
+            </div>
+            <div class="relative inline-block">
+              <button id="btn-view-mode" class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                <span id="view-mode-label">Preview</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div id="view-mode-dropdown" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <div class="py-1">
+                  <button data-mode="preview" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Visualizar tema</button>
+                  <button data-mode="html" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Ver HTML gerado</button>
+                  <button data-mode="css" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Ver CSS gerado</button>
+                  <button data-mode="astro" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Ver código Astro</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="preview-container" class="border rounded-md overflow-hidden">
+          <!-- Status inicial -->
+          <div id="preview-status" class="flex flex-col items-center justify-center h-96 bg-gray-50 text-center p-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+            </svg>
+            <p class="text-gray-600 mb-2">Insira um JSON válido para visualizar o preview do tema</p>
+            <p class="text-gray-500 text-sm">Os componentes serão renderizados conforme definido no JSON</p>
+          </div>
+          
+          <!-- Preview do tema -->
+          <div id="preview-iframe-container" class="hidden">
+            <iframe id="preview-iframe" class="w-full transition-all duration-300" style="height: 600px; max-width: 100%;" title="Preview do Tema"></iframe>
+          </div>
+          
+          <!-- Preview do código gerado -->
+          <div id="preview-code-container" class="hidden h-96 overflow-auto">
+            <pre id="preview-code" class="p-4 font-mono text-sm whitespace-pre-wrap"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modais -->
+  <div id="loading-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p class="text-gray-700">Importando tema...</p>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  // Exemplo de JSON para carregamento rápido
+  const exemploJSON = {
+    "type": "themes",
+    "operation": "create",
+    "data": {
+      "name": "Tema de Exemplo",
+      "description": "Um tema de exemplo para demonstração",
+      "version": "1.0.0",
+      "status": "draft",
+      "validationStatus": "pending",
+      "templates": [
+        {
+          "name": "Página Inicial",
+          "key": "home",
+          "description": "Template para página inicial",
+          "defaultTemplate": true
+        }
+      ],
+      "mainStyles": "body { font-family: sans-serif; }",
+      "layouts": [
+        {
+          "name": "Layout Base",
+          "key": "base",
+          "isDefault": true,
+          "template": "---\n// Layout Base\n---\n<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>{title}</title>\n  <style>{themeCSS}</style>\n</head>\n<body>\n  <header>\n    <div class=\"container\">\n      <div class=\"logo\">{siteName}</div>\n    </div>\n  </header>\n  \n  <main>\n    <slot />\n  </main>\n  \n  <footer>\n    <div class=\"container\">\n      <p>&copy; {new Date().getFullYear()} {siteName}</p>\n    </div>\n  </footer>\n</body>\n</html>"
+        }
+      ],
+      "components": [
+        {
+          "name": "Hero",
+          "key": "hero",
+          "description": "Componente hero",
+          "category": "content",
+          "template": "---\n// Hero Component\nconst { title, subtitle, buttonText, buttonUrl } = Astro.props;\n---\n<section class=\"hero\">\n  <div class=\"container\">\n    <h1>{title}</h1>\n    {subtitle && <p>{subtitle}</p>}\n    {buttonText && buttonUrl && \n      <a href={buttonUrl} class=\"btn\">{buttonText}</a>\n    }\n  </div>\n</section>",
+          "styles": ".hero { padding: 4rem 0; background-color: #f5f5f5; } .hero h1 { margin-bottom: 1rem; } .hero p { margin-bottom: 2rem; } .btn { display: inline-block; background-color: #3498db; color: white; padding: 0.75rem 1.5rem; border-radius: 4px; text-decoration: none; }",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string", "title": "Título" },
+              "subtitle": { "type": "string", "title": "Subtítulo" },
+              "buttonText": { "type": "string", "title": "Texto do Botão" },
+              "buttonUrl": { "type": "string", "title": "URL do Botão" }
+            },
+            "required": ["title"]
+          }
+        }
+      ],
+      "settings": {
+        "colors": [
+          {
+            "name": "Primária",
+            "key": "primary",
+            "value": "#3498db"
+          }
+        ]
+      }
+    },
+    "options": {
+      "skipValidation": false,
+      "overrideExisting": true
+    }
+  };
+
+  // Elementos do DOM
+  const form = document.getElementById('import-form');
+  const jsonInput = document.getElementById('json-input');
+  const jsonLineNumbers = document.getElementById('json-line-numbers');
+  const validationContainer = document.getElementById('validation-container');
+  const validationStatus = document.getElementById('validation-status');
+  const validationMessage = document.getElementById('validation-message');
+  const validationDetails = document.getElementById('validation-details');
+  const fileInput = document.getElementById('file-input');
+  const btnExemplo = document.getElementById('btn-exemplo');
+  const btnFormat = document.getElementById('btn-format');
+  const btnLimpar = document.getElementById('btn-limpar');
+  const overrideExisting = document.getElementById('override-existing');
+  const skipValidation = document.getElementById('skip-validation');
+  const previewMode = document.getElementById('preview-mode');
+  const submitBtn = document.getElementById('submit-btn');
+  const loadingModal = document.getElementById('loading-modal');
+  const resultContainer = document.getElementById('result-container');
+  const resultTitle = document.getElementById('result-title');
+  const resultContent = document.getElementById('result-content');
+  
+  // Elementos do preview
+  const btnRefreshPreview = document.getElementById('btn-refresh-preview');
+  const btnViewport = document.getElementById('btn-viewport');
+  const viewportLabel = document.getElementById('viewport-label');
+  const viewportDropdown = document.getElementById('viewport-dropdown');
+  const viewportButtons = viewportDropdown.querySelectorAll('button');
+  const btnViewMode = document.getElementById('btn-view-mode');
+  const viewModeLabel = document.getElementById('view-mode-label');
+  const viewModeDropdown = document.getElementById('view-mode-dropdown');
+  const viewModeButtons = viewModeDropdown.querySelectorAll('button');
+  const previewStatus = document.getElementById('preview-status');
+  const previewIframeContainer = document.getElementById('preview-iframe-container');
+  const previewIframe = document.getElementById('preview-iframe');
+  const previewCodeContainer = document.getElementById('preview-code-container');
+  const previewCode = document.getElementById('preview-code');
+  
+  // Estado da aplicação
+  let currentViewport = "100%";
+  let currentDevice = "desktop";
+  let currentViewMode = "preview";
+  let schemaValidationTimer = null;
+  let themeSchema = null;
+  
+  // Event listeners para a interface
+  document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar numeração de linhas
+    updateLineNumbers();
+    
+    // Adicionar listeners para textarea
+    jsonInput.addEventListener('input', handleJsonInput);
+    jsonInput.addEventListener('scroll', syncLineNumbersScroll);
+    
+    // Listeners para os botões principais
+    btnExemplo.addEventListener('click', loadExampleJson);
+    btnFormat.addEventListener('click', formatJson);
+    btnLimpar.addEventListener('click', clearJsonInput);
+    
+    // Listener para upload de arquivo
+    fileInput.addEventListener('change', handleFileUpload);
+    
+    // Listeners para preview
+    btnRefreshPreview.addEventListener('click', refreshPreview);
+    previewMode.addEventListener('change', togglePreviewMode);
+    
+    // Configuração dos dropdowns
+    btnViewport.addEventListener('click', () => toggleDropdown(viewportDropdown));
+    btnViewMode.addEventListener('click', () => toggleDropdown(viewModeDropdown));
+    
+    // Listener para botões de viewport
+    viewportButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const width = e.target.dataset.width;
+        const device = e.target.dataset.device;
+        changeViewport(width, device);
+        viewportDropdown.classList.add('hidden');
+      });
+    });
+    
+    // Listener para botões de modo de visualização
+    viewModeButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const mode = e.target.dataset.mode;
+        changeViewMode(mode);
+        viewModeDropdown.classList.add('hidden');
+      });
+    });
+    
+    // Fechar dropdowns ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (!btnViewport.contains(e.target)) {
+        viewportDropdown.classList.add('hidden');
+      }
+      if (!btnViewMode.contains(e.target)) {
+        viewModeDropdown.classList.add('hidden');
+      }
+    });
+    
+    // Carregar schema para validação
+    loadThemeSchema();
+  });
+  
+  // Buscar e carregar o schema do tema
+  async function loadThemeSchema() {
+    try {
+      const response = await fetch('/api/validate-theme/schema');
+      if (response.ok) {
+        themeSchema = await response.json();
+        console.log('Schema de tema carregado com sucesso');
+      } else {
+        console.error('Erro ao carregar schema do tema');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar schema:', error);
+    }
+  }
+  
+  // Handler para entrada de JSON
+  function handleJsonInput() {
+    updateLineNumbers();
+    validateJsonInput();
+    
+    // Validação avançada com debounce
+    clearTimeout(schemaValidationTimer);
+    schemaValidationTimer = setTimeout(() => {
+      validateJsonSchema();
+    }, 500);
+  }
+  
+  // Atualizar numeração de linhas
+  function updateLineNumbers() {
+    const lines = jsonInput.value.split('\n');
+    const count = lines.length;
+    let lineNumbersHTML = '';
+    
+    for (let i = 1; i <= count; i++) {
+      lineNumbersHTML += `<div>${i}</div>`;
+    }
+    
+    jsonLineNumbers.innerHTML = lineNumbersHTML;
+  }
+  
+  // Sincronizar scroll da numeração de linhas
+  function syncLineNumbersScroll() {
+    jsonLineNumbers.scrollTop = jsonInput.scrollTop;
+  }
+  
+  // Carregar JSON de exemplo
+  function loadExampleJson() {
+    jsonInput.value = JSON.stringify(exemploJSON, null, 2);
+    updateLineNumbers();
+    validateJsonInput();
+    validateJsonSchema();
+  }
+  
+  // Formatar JSON
+  function formatJson() {
+    try {
+      const jsonValue = jsonInput.value.trim();
+      if (!jsonValue) return;
+      
+      const parsedJson = JSON.parse(jsonValue);
+      jsonInput.value = JSON.stringify(parsedJson, null, 2);
+      
+      updateLineNumbers();
+      validateJsonInput(true);
+      
+      showValidationMessage('success', 'JSON formatado com sucesso');
+    } catch (error) {
+      showValidationMessage('error', `Não foi possível formatar: ${error.message}`);
+    }
+  }
+  
+  // Limpar o campo de JSON
+  function clearJsonInput() {
+    jsonInput.value = '';
+    updateLineNumbers();
+    validationContainer.classList.add('hidden');
+    
+    // Resetar preview
+    previewStatus.classList.remove('hidden');
+    previewIframeContainer.classList.add('hidden');
+    previewCodeContainer.classList.add('hidden');
+  }
+  
+  // Validação básica de JSON
+  function validateJsonInput(silent = false) {
+    try {
+      const jsonValue = jsonInput.value.trim();
+      if (!jsonValue) {
+        validationContainer.classList.add('hidden');
+        return false;
+      }
+      
+      JSON.parse(jsonValue);
+      
+      if (!silent) {
+        showValidationMessage('success', 'JSON válido');
+      }
+      
+      return true;
+    } catch (error) {
+      showValidationMessage('error', `JSON inválido: ${error.message}`);
+      return false;
+    }
+  }
+  
+  // Validação avançada com JSON Schema
+  async function validateJsonSchema() {
+    try {
+      const jsonValue = jsonInput.value.trim();
+      if (!jsonValue) return;
+      
+      // Verificar se temos um schema para validar
+      if (!themeSchema) {
+        console.warn('Schema de tema não disponível para validação avançada');
+        return;
+      }
+      
+      const themeData = JSON.parse(jsonValue);
+      
+      // Validar contra o schema
+      const response = await fetch('/api/validate-theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(themeData)
+      });
+      
+      const result = await response.json();
+      
+      if (result.valid) {
+        showValidationMessage('success', 'Tema válido', result.details || []);
+        
+        // Atualizar preview se o modo de preview estiver ativo
+        if (previewMode.checked) {
+          refreshPreview();
+        }
+      } else {
+        showValidationMessage('error', 'Tema inválido', result.errors || []);
+      }
+    } catch (error) {
+      console.error('Erro na validação de schema:', error);
+    }
+  }
+  
+  // Exibir mensagem de validação
+  function showValidationMessage(type, message, details = []) {
+    validationContainer.classList.remove('hidden');
+    validationStatus.innerHTML = type === 'success' 
+      ? '<svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>'
+      : '<svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>';
+    
+    validationMessage.textContent = message;
+    validationMessage.className = `text-sm font-medium ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+    
+    // Limpar detalhes anteriores
+    validationDetails.innerHTML = '';
+    
+    // Adicionar detalhes, se houver
+    if (details.length > 0) {
+      details.forEach(detail => {
+        const li = document.createElement('li');
+        li.textContent = detail;
+        li.className = type === 'success' ? 'text-green-600' : 'text-red-600';
+        validationDetails.appendChild(li);
+      });
+      validationDetails.classList.remove('hidden');
+    } else {
+      validationDetails.classList.add('hidden');
+    }
+  }
+  
+  // Upload de arquivo JSON
+  function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.json')) {
+      showValidationMessage('error', 'Apenas arquivos JSON são permitidos');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result;
+        const json = JSON.parse(content);
+        jsonInput.value = JSON.stringify(json, null, 2);
+        
+        updateLineNumbers();
+        validateJsonInput();
+        validateJsonSchema();
+        
+        showValidationMessage('success', `Arquivo "${file.name}" carregado com sucesso`);
+      } catch (error) {
+        showValidationMessage('error', `Erro ao ler arquivo: ${error.message}`);
+      }
+    };
+    
+    reader.onerror = () => {
+      showValidationMessage('error', 'Erro ao ler o arquivo');
+    };
+    
+    reader.readAsText(file);
+  }
+  
+  // Toggle dropdown
+  function toggleDropdown(dropdown) {
+    dropdown.classList.toggle('hidden');
+  }
+  
+  // Alterar viewport
+  function changeViewport(width, device) {
+    currentViewport = width;
+    currentDevice = device;
+    viewportLabel.textContent = device.charAt(0).toUpperCase() + device.slice(1);
+    
+    if (previewIframe.contentDocument) {
+      previewIframe.style.width = width;
+    }
+  }
+  
+  // Alterar modo de visualização
+  function changeViewMode(mode) {
+    currentViewMode = mode;
+    viewModeLabel.textContent = {
+      'preview': 'Preview',
+      'html': 'HTML',
+      'css': 'CSS',
+      'astro': 'Astro'
+    }[mode];
+    
+    refreshPreview();
+  }
+  
+  // Toggle modo de preview
+  function togglePreviewMode() {
+    if (previewMode.checked) {
+      refreshPreview();
+    }
+  }
+  
+  // Atualizar preview
+  async function refreshPreview() {
+    try {
+      const jsonValue = jsonInput.value.trim();
+      if (!jsonValue) {
+        previewStatus.classList.remove('hidden');
+        previewIframeContainer.classList.add('hidden');
+        previewCodeContainer.classList.add('hidden');
+        return;
+      }
+      
+      const themeData = JSON.parse(jsonValue);
+      
+      // Mostrar status de carregamento
+      previewStatus.classList.remove('hidden');
+      previewStatus.innerHTML = `
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Gerando preview...</p>
+      `;
+      
+      // Se for preview visual
+      if (currentViewMode === 'preview') {
+        previewIframeContainer.classList.remove('hidden');
+        previewCodeContainer.classList.add('hidden');
+        
+        // Gerar preview
+        const response = await fetch('/api/theme-preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(themeData)
+        });
+        
+        // Se bem-sucedido, mostrar iframe
+        if (response.ok) {
+          const previewData = await response.json();
+          
+          // Criar um Blob com o HTML para exibir no iframe
+          const blob = new Blob([previewData.html], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          
+          previewIframe.onload = () => {
+            previewStatus.classList.add('hidden');
+            URL.revokeObjectURL(url);
+          };
+          
+          previewIframe.src = url;
+          previewIframe.style.width = currentViewport;
+        } else {
+          const error = await response.json();
+          throw new Error(error.message || 'Erro ao gerar preview');
+        }
+      } 
+      // Se for visualização de código
+      else {
+        previewIframeContainer.classList.add('hidden');
+        previewCodeContainer.classList.remove('hidden');
+        
+        // Gerar código
+        const response = await fetch('/api/theme-preview', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Preview-Mode': currentViewMode 
+          },
+          body: JSON.stringify(themeData)
+        });
+        
+        if (response.ok) {
+          const codeData = await response.json();
+          let code = '';
+          
+          // Formatar o código de acordo com o modo
+          switch (currentViewMode) {
+            case 'html':
+              code = codeData.html || 'Nenhum HTML gerado';
+              break;
+            case 'css':
+              code = codeData.css || 'Nenhum CSS gerado';
+              break;
+            case 'astro':
+              code = codeData.astro || 'Nenhum código Astro gerado';
+              break;
+          }
+          
+          // Atualizar a exibição de código
+          previewCode.textContent = code;
+          previewStatus.classList.add('hidden');
+        } else {
+          const error = await response.json();
+          throw new Error(error.message || 'Erro ao gerar código');
+        }
+      }
+    } catch (error) {
+      console.error('Erro no preview:', error);
+      
+      previewStatus.classList.remove('hidden');
+      previewStatus.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <p class="text-red-600 mb-2">Erro ao gerar preview</p>
+        <p class="text-gray-500 text-sm">${error.message}</p>
+      `;
+      
+      previewIframeContainer.classList.add('hidden');
+      previewCodeContainer.classList.add('hidden');
+    }
+  }
+
+  // Submissão do formulário
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Se estiver no modo preview, mudar para modo de envio
+    if (previewMode.checked) {
+      previewMode.checked = false;
+    }
+    
+    if (!validateJsonInput()) {
+      return;
+    }
+    
+    try {
+      // Mostrar modal de carregamento
+      loadingModal.classList.remove('hidden');
+      
+      // Obter o JSON do tema
+      const rawJSON = jsonInput.value;
+      let themeData = JSON.parse(rawJSON);
+      
+      // Garantir que as opções estejam definidas
+      if (!themeData.options) {
+        themeData.options = {};
+      }
+      
+      // Atualizar opções com os valores dos checkboxes
+      themeData.options.overrideExisting = overrideExisting.checked;
+      themeData.options.skipValidation = skipValidation.checked;
+      
+      // Enviar para o backend
+      const response = await fetch('/api/theme-import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(themeData)
+      });
+      
+      // Processar resposta
+      const result = await response.json();
+      
+      // Esconder modal de carregamento
+      loadingModal.classList.add('hidden');
+      
+      // Mostrar resultado
+      resultContainer.classList.remove('hidden');
+      
+      if (response.ok) {
+        // Sucesso
+        resultContainer.classList.remove('border-red-500', 'bg-red-50');
+        resultContainer.classList.add('border-green-500', 'bg-green-50');
+        resultTitle.textContent = '✅ Tema importado com sucesso!';
+        resultTitle.classList.remove('text-red-600');
+        resultTitle.classList.add('text-green-600');
+        
+        let content = `
+          <p class="mb-2"><strong>Nome:</strong> ${result.data.name}</p>
+          <p class="mb-2"><strong>ID:</strong> ${result.data.id}</p>
+          <p class="mb-2"><strong>Status:</strong> ${result.data.status}</p>
+          <p class="mb-2"><strong>Operação:</strong> ${result.operation === 'create' ? 'Criado' : 'Atualizado'}</p>
+          <div class="mt-4">
+            <a href="/admin/themes" class="text-blue-600 hover:underline">Ver todos os temas</a>
+            <span class="mx-2">|</span>
+            <a href="${`/admin/collections/themes/${result.data.id}`}" target="_blank" class="text-blue-600 hover:underline">
+              Editar no Payload
+            </a>
+          </div>
+        `;
+        
+        resultContent.innerHTML = content;
+      } else {
+        // Erro
+        resultContainer.classList.remove('border-green-500', 'bg-green-50');
+        resultContainer.classList.add('border-red-500', 'bg-red-50');
+        resultTitle.textContent = '❌ Erro ao importar tema';
+        resultTitle.classList.remove('text-green-600');
+        resultTitle.classList.add('text-red-600');
+        
+        let content = `
+          <p class="mb-2"><strong>Erro:</strong> ${result.error || 'Erro desconhecido'}</p>
+          <p class="mb-2"><strong>Código:</strong> ${result.code || response.status}</p>
+          ${result.requestId ? `<p class="mb-2"><strong>ID da Requisição:</strong> ${result.requestId}</p>` : ''}
+          <p class="mt-4">Verifique o JSON do tema e tente novamente.</p>
+        `;
+        
+        resultContent.innerHTML = content;
+      }
+    } catch (error) {
+      // Erro de rede ou de processamento
+      loadingModal.classList.add('hidden');
+      
+      resultContainer.classList.remove('hidden', 'border-green-500', 'bg-green-50');
+      resultContainer.classList.add('border-red-500', 'bg-red-50');
+      resultTitle.textContent = '❌ Erro ao processar requisição';
+      resultTitle.classList.remove('text-green-600');
+      resultTitle.classList.add('text-red-600');
+      
+      resultContent.innerHTML = `
+        <p class="mb-2"><strong>Erro:</strong> ${error.message || 'Erro desconhecido'}</p>
+        <p class="mt-4">Verifique sua conexão e tente novamente.</p>
+      `;
+    }
+  });
+</script>

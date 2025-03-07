@@ -1,0 +1,79 @@
+---
+import { getComponentDefinition } from '../utils/api';
+import { processComponent } from '../utils/template-processor';
+
+const { component: componentName, props, id } = Astro.props;
+
+// Buscar definição do componente
+const componentDef = await getComponentDefinition(componentName);
+
+// Se componente não existe, mostrar placeholder
+if (!componentDef) {
+  return `<div class="component-error">Componente não encontrado: ${componentName}</div>`;
+}
+
+// Processar o HTML do componente com as props
+const processedHtml = processComponent(componentDef.html, props);
+
+// Determinar tipo de hidratação
+const hydrationType = componentDef.hydration || 'none';
+---
+
+{hydrationType === 'none' && (
+  <div class={`component component-${componentName}`} data-component-id={id}>
+    <style set:html={componentDef.css}></style>
+    <Fragment set:html={processedHtml} />
+  </div>
+)}
+
+{hydrationType === 'web-component' && (
+  <konduza-component 
+    class={`component component-${componentName}`}
+    data-component-id={id}
+    data-component-name={componentName}
+    data-props={JSON.stringify(props)}
+  >
+    <style set:html={componentDef.css}></style>
+    <Fragment set:html={processedHtml} />
+    <script type="module" set:html={`
+      class KonduzaComponent extends HTMLElement {
+        connectedCallback() {
+          ${componentDef.js}
+        }
+      }
+      if (!customElements.get('konduza-component-${id}')) {
+        customElements.define('konduza-component-${id}', KonduzaComponent);
+      }
+    `}></script>
+  </konduza-component>
+)}
+
+{hydrationType === 'react' && (
+  <div 
+    id={`react-component-${id}`}
+    data-component={componentName}
+    data-props={JSON.stringify(props)}
+    class={`component component-${componentName}`}
+  >
+    <Fragment set:html={processedHtml} />
+    <script>
+      import { hydrateReactComponent } from '../utils/hydration.js';
+      hydrateReactComponent(`react-component-${id}`);
+    </script>
+  </div>
+)}
+
+{hydrationType === 'svelte' && (
+  <div 
+    id={`svelte-component-${id}`}
+    data-component={componentName}
+    data-props={JSON.stringify(props)}
+    class={`component component-${componentName}`}
+  >
+    <Fragment set:html={processedHtml} />
+    <script>
+      import { hydrateSvelteComponent } from '../utils/hydration.js';
+      hydrateSvelteComponent(`svelte-component-${id}`);
+    </script>
+  </div>
+)}

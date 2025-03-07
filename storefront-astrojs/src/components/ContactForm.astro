@@ -1,0 +1,307 @@
+---
+/**
+ * Componente para formulários de contato
+ * 
+ * Este componente renderiza um formulário de contato
+ * com validação e envio via API.
+ */
+
+const {
+  title = 'Entre em Contato',
+  subtitle = 'Preencha o formulário abaixo e entraremos em contato o mais breve possível.',
+  submitText = 'Enviar Mensagem',
+  successMessage = 'Sua mensagem foi enviada com sucesso! Entraremos em contato em breve.',
+  errorMessage = 'Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.',
+  formId = 'contact-form',
+  siteId = '',
+  backgroundColor = '',
+  textColor = '',
+  accentColor = '',
+  layout = 'vertical' // vertical, horizontal, compact
+} = Astro.props;
+
+// Determinar classes para layout
+const layoutClass = `form-layout-${layout}`;
+---
+
+<div class={`contact-form-container ${layoutClass}`} id={formId}>
+  <div class="form-header">
+    <h2 class="form-title">{title}</h2>
+    <p class="form-subtitle">{subtitle}</p>
+  </div>
+  
+  <form 
+    class="contact-form" 
+    method="POST" 
+    action="/api/submit-form" 
+    data-site-id={siteId}
+  >
+    <div class="form-alerts">
+      <div class="form-alert success-message" style="display: none;">
+        {successMessage}
+      </div>
+      <div class="form-alert error-message" style="display: none;">
+        {errorMessage}
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label for={`${formId}-name`}>Nome</label>
+      <input 
+        type="text" 
+        id={`${formId}-name`} 
+        name="name" 
+        required
+        placeholder="Seu nome completo"
+      />
+    </div>
+    
+    <div class="form-group">
+      <label for={`${formId}-email`}>Email</label>
+      <input 
+        type="email" 
+        id={`${formId}-email`} 
+        name="email" 
+        required
+        placeholder="seu@email.com"
+      />
+    </div>
+    
+    <div class="form-group">
+      <label for={`${formId}-phone`}>Telefone (opcional)</label>
+      <input 
+        type="tel" 
+        id={`${formId}-phone`} 
+        name="phone" 
+        placeholder="(00) 00000-0000"
+      />
+    </div>
+    
+    <div class="form-group">
+      <label for={`${formId}-subject`}>Assunto</label>
+      <input 
+        type="text" 
+        id={`${formId}-subject`} 
+        name="subject" 
+        required
+        placeholder="Assunto da mensagem"
+      />
+    </div>
+    
+    <div class="form-group">
+      <label for={`${formId}-message`}>Mensagem</label>
+      <textarea 
+        id={`${formId}-message`} 
+        name="message" 
+        rows="5" 
+        required
+        placeholder="Digite sua mensagem"
+      ></textarea>
+    </div>
+    
+    <div class="form-group form-privacy">
+      <input 
+        type="checkbox" 
+        id={`${formId}-privacy`} 
+        name="privacy" 
+        required
+      />
+      <label for={`${formId}-privacy`}>
+        Concordo com a <a href="/privacidade">Política de Privacidade</a>
+      </label>
+    </div>
+    
+    <div class="form-submit">
+      <button type="submit" class="btn btn-primary">{submitText}</button>
+    </div>
+  </form>
+</div>
+
+<script define:vars={{ formId }}>
+// Script para validação e submissão do formulário
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector(`#${formId} .contact-form`);
+  const successMessage = document.querySelector(`#${formId} .success-message`);
+  const errorMessage = document.querySelector(`#${formId} .error-message`);
+  
+  if (form) {
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Esconder mensagens de alerta
+      successMessage.style.display = 'none';
+      errorMessage.style.display = 'none';
+      
+      // Coletar dados do formulário
+      const formData = new FormData(form);
+      const formObject = Object.fromEntries(formData.entries());
+      
+      try {
+        // Adicionar o ID do site
+        formObject.siteId = form.dataset.siteId;
+        
+        // Enviar dados
+        const response = await fetch('/api/submit-form', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formObject)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          // Mostrar mensagem de sucesso
+          successMessage.style.display = 'block';
+          form.reset();
+        } else {
+          // Mostrar mensagem de erro
+          errorMessage.textContent = data.error || errorMessage.textContent;
+          errorMessage.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Erro ao enviar formulário:', error);
+        errorMessage.style.display = 'block';
+      }
+    });
+  }
+});
+</script>
+
+<style define:vars={{ 
+  backgroundColor: backgroundColor || 'var(--color-background-alt)',
+  textColor: textColor || 'var(--color-text)',
+  accentColor: accentColor || 'var(--color-primary)'
+}}>
+  .contact-form-container {
+    background-color: var(--backgroundColor);
+    color: var(--textColor);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    margin: var(--spacing-xl) 0;
+  }
+  
+  .form-header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .form-title {
+    margin-bottom: var(--spacing-sm);
+    color: var(--accentColor);
+  }
+  
+  .form-subtitle {
+    color: var(--color-text-light);
+  }
+  
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-layout-horizontal .contact-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+  }
+  
+  .form-layout-horizontal .form-group:nth-last-child(2),
+  .form-layout-horizontal .form-privacy,
+  .form-layout-horizontal .form-submit,
+  .form-layout-horizontal .form-alerts {
+    grid-column: span 2;
+  }
+  
+  .form-layout-compact .contact-form {
+    gap: var(--spacing-sm);
+  }
+  
+  label {
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius-sm);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border-color var(--transition-fast);
+  }
+  
+  input:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--accentColor);
+    box-shadow: 0 0 0 2px rgba(119, 82, 254, 0.1);
+  }
+  
+  .form-privacy {
+    flex-direction: row !important;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+  
+  .form-privacy input {
+    margin: 0;
+  }
+  
+  .form-privacy label {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  
+  .form-submit {
+    text-align: center;
+    margin-top: var(--spacing-md);
+  }
+  
+  .form-submit button {
+    background-color: var(--accentColor);
+    min-width: 200px;
+  }
+  
+  .form-alert {
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+  }
+  
+  .success-message {
+    background-color: var(--color-success);
+    color: white;
+  }
+  
+  .error-message {
+    background-color: var(--color-danger);
+    color: white;
+  }
+  
+  @media (max-width: 768px) {
+    .form-layout-horizontal .contact-form {
+      grid-template-columns: 1fr;
+    }
+    
+    .form-layout-horizontal .form-group:nth-last-child(2),
+    .form-layout-horizontal .form-privacy,
+    .form-layout-horizontal .form-submit,
+    .form-layout-horizontal .form-alerts {
+      grid-column: 1;
+    }
+  }
+</style>

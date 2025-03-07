@@ -1,0 +1,212 @@
+---
+/**
+ * Componente de Grid de Recursos
+ * 
+ * Este componente renderiza uma grade de recursos/características
+ * com ícones, títulos e descrições.
+ */
+
+const {
+  title = '',
+  subtitle = '',
+  features = [
+    {
+      icon: '🚀',
+      title: 'Recurso 1',
+      description: 'Descrição do recurso 1'
+    },
+    {
+      icon: '⚡',
+      title: 'Recurso 2',
+      description: 'Descrição do recurso 2'
+    },
+    {
+      icon: '🔒',
+      title: 'Recurso 3',
+      description: 'Descrição do recurso 3'
+    }
+  ],
+  columns = 3, // 1, 2, 3, 4
+  alignment = 'center', // left, center
+  backgroundColor = '',
+  textColor = '',
+  iconColor = 'var(--color-primary)',
+  style = 'card', // card, simple, minimal
+  id = ''
+} = Astro.props;
+
+// CSS Dinâmico para colunas
+const gridTemplateColumns = {
+  1: '1fr',
+  2: 'repeat(2, 1fr)',
+  3: 'repeat(3, 1fr)',
+  4: 'repeat(4, 1fr)'
+};
+
+// Escolher a classe de estilo
+const styleClass = `feature-grid-${style}`;
+
+// Preparar estilos de cores
+const colorStyles = {
+  backgroundColor: backgroundColor || 'transparent',
+  color: textColor || 'inherit'
+};
+
+// Converter estilos para string
+const styleString = Object.entries(colorStyles)
+  .filter(([_, value]) => value)
+  .map(([key, value]) => `${key}:${value}`)
+  .join(';');
+
+// Classe de alinhamento
+const alignClass = `feature-align-${alignment}`;
+---
+
+<section 
+  class={`feature-grid ${styleClass} ${alignClass}`} 
+  style={styleString}
+  id={id}
+>
+  <div class="container">
+    {(title || subtitle) && (
+      <div class="feature-grid-header">
+        {title && <h2 class="feature-grid-title">{title}</h2>}
+        {subtitle && <p class="feature-grid-subtitle">{subtitle}</p>}
+      </div>
+    )}
+    
+    <div 
+      class="feature-grid-items"
+      style={`grid-template-columns: ${gridTemplateColumns[columns]}`}
+    >
+      {features.map(feature => (
+        <div class="feature-item">
+          {feature.icon && (
+            <div class="feature-icon" style={`color: ${iconColor}`}>
+              {feature.icon}
+            </div>
+          )}
+          
+          <h3 class="feature-title">{feature.title}</h3>
+          
+          <p class="feature-description">{feature.description}</p>
+          
+          {feature.link && (
+            <a href={feature.link} class="feature-link">
+              {feature.linkText || 'Saiba mais'}
+            </a>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .feature-grid {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .feature-grid-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .feature-grid-title {
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-primary);
+  }
+  
+  .feature-grid-subtitle {
+    font-size: var(--font-size-lg);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    color: var(--color-text-light);
+  }
+  
+  .feature-grid-items {
+    display: grid;
+    gap: var(--spacing-lg);
+  }
+  
+  .feature-item {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .feature-title {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .feature-description {
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text-light);
+  }
+  
+  .feature-link {
+    margin-top: auto;
+    font-weight: bold;
+  }
+  
+  /* Estilos de alinhamento */
+  .feature-align-left .feature-item {
+    text-align: left;
+  }
+  
+  .feature-align-center .feature-item {
+    text-align: center;
+    align-items: center;
+  }
+  
+  /* Estilos variantes */
+  .feature-grid-card .feature-item {
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-lg);
+    height: 100%;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  }
+  
+  .feature-grid-card .feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .feature-grid-simple .feature-item {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid #eee;
+  }
+  
+  .feature-grid-minimal .feature-icon {
+    font-size: 1.75rem;
+  }
+  
+  /* Responsividade */
+  @media (max-width: 992px) {
+    .feature-grid-items {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .feature-grid-items {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .feature-grid {
+      padding: var(--spacing-lg) 0;
+    }
+    
+    .feature-grid-header {
+      margin-bottom: var(--spacing-lg);
+    }
+  }
+</style>
