@@ -15,6 +15,15 @@ export async function generateThemePreview(themeData, mode = 'preview') {
   console.log(`[ThemePreviewGenerator] Gerando preview em modo: ${mode}`);
   
   try {
+    // Verificar se temos dados válidos para gerar o preview
+    if (!themeData || (typeof themeData !== 'object')) {
+      return {
+        success: false,
+        error: 'Dados do tema inválidos ou vazios',
+        mode
+      };
+    }
+    
     // Inicializar resultado
     const result = {
       success: true,
@@ -42,7 +51,11 @@ export async function generateThemePreview(themeData, mode = 'preview') {
     return result;
   } catch (error) {
     console.error('[ThemePreviewGenerator] Erro:', error);
-    throw error;
+    return {
+      success: false,
+      error: error.message || 'Erro ao gerar preview',
+      mode
+    };
   }
 }
 
@@ -110,19 +123,24 @@ function generateHtmlCode(themeData) {
  * @returns {string} - Código CSS
  */
 function generateCssCode(themeData) {
+  // Verificar se temos dados válidos
+  if (!themeData) {
+    return '/* Nenhum dado de tema fornecido */';
+  }
+  
   // Iniciar com o CSS principal
   let css = themeData.mainStyles || '';
   
   // Adicionar CSS de cada componente
   if (themeData.components && Array.isArray(themeData.components)) {
     themeData.components.forEach(component => {
-      if (component.styles) {
-        css += `\n\n/* ${component.name} */\n${component.styles}`;
+      if (component && component.styles) {
+        css += `\n\n/* ${component.name || 'Componente'} */\n${component.styles}`;
       }
     });
   }
   
-  return css;
+  return css || '/* Sem estilos definidos */';
 }
 
 /**
@@ -160,12 +178,18 @@ function generateAstroCode(themeData) {
  * @returns {Object|null} - Layout padrão ou null se não existir
  */
 function getDefaultLayout(themeData) {
-  if (!themeData.layouts || !Array.isArray(themeData.layouts)) {
+  // Verificar se themeData existe
+  if (!themeData) {
+    return null;
+  }
+  
+  // Verificar se layouts existe e é um array
+  if (!themeData.layouts || !Array.isArray(themeData.layouts) || themeData.layouts.length === 0) {
     return null;
   }
   
   // Procurar layout padrão
-  const defaultLayout = themeData.layouts.find(layout => layout.isDefault === true);
+  const defaultLayout = themeData.layouts.find(layout => layout && layout.isDefault === true);
   
   // Se não encontrou, retornar o primeiro
   return defaultLayout || themeData.layouts[0];

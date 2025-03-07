@@ -17,13 +17,15 @@ export async function POST({ request }) {
     const previewMode = request.headers.get('X-Preview-Mode') || 'preview';
     
     // Processar requisição
-    const data = await request.json();
-    
-    if (!data || !data.data) {
+    let data;
+    try {
+      data = await request.json();
+    } catch (error) {
+      console.error('[ThemePreview API] Erro ao processar JSON:', error);
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'JSON inválido ou incompleto'
+          error: 'JSON inválido no corpo da requisição'
         }),
         {
           status: 400,
@@ -32,11 +34,45 @@ export async function POST({ request }) {
       );
     }
     
-    // Extrair dados do tema
-    const themeData = data.data;
+    // Verificar se o JSON está vazio
+    if (!data) {
+      console.warn('[ThemePreview API] Dados vazios recebidos');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Dados vazios recebidos'
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Extrair dados do tema - lidar com diferentes formatos
+    let themeData;
+    if (data.type === 'themes' && data.data) {
+      themeData = data.data;
+    } else if (data.data) {
+      themeData = data.data;
+    } else {
+      themeData = data;
+    }
     
     // Gerar preview do tema
     const previewResult = await generateThemePreview(themeData, previewMode);
+    
+    // Verificar se o preview foi gerado com sucesso
+    if (!previewResult.success) {
+      console.warn(`[ThemePreview API] Falha ao gerar preview: ${previewResult.error}`);
+      return new Response(
+        JSON.stringify(previewResult),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
     
     console.log(`[ThemePreview API] Preview gerado com sucesso (modo: ${previewMode})`);
     
@@ -54,7 +90,7 @@ export async function POST({ request }) {
     return new Response(
       JSON.stringify({
         success: false,
-        error: `Erro ao gerar preview: ${error.message}`
+        error: `Erro ao gerar preview: ${error.message || 'Erro desconhecido'}`
       }),
       {
         status: 500,

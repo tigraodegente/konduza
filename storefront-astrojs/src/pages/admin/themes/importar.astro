@@ -438,6 +438,9 @@ const apiBase = import.meta.env.PUBLIC_API_URL || '';
     updateLineNumbers();
     validationContainer.classList.add('hidden');
     
+    // Desmarcar checkbox de preview para evitar atualização automática
+    previewMode.checked = false;
+    
     // Resetar preview
     previewStatus.classList.remove('hidden');
     previewIframeContainer.classList.add('hidden');
