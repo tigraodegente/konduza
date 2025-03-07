@@ -151,7 +151,7 @@ function translateHydration(type) {
       <div class="category-filters">
         <span class="filter-label">Categoria:</span>
         <div class="filter-options">
-          {categories.map(category => (
+          {categories.map((category) => (
             <button 
               type="button" 
               class={`filter-btn ${category.id === 'all' ? 'active' : ''}`}
@@ -166,7 +166,7 @@ function translateHydration(type) {
       <div class="hydration-filters">
         <span class="filter-label">Tipo:</span>
         <div class="filter-options">
-          {hydrationTypes.map(type => (
+          {hydrationTypes.map((type) => (
             <button 
               type="button" 
               class={`filter-btn ${type.id === 'all' ? 'active' : ''}`}
@@ -185,10 +185,10 @@ function translateHydration(type) {
     
     <!-- Grade de Componentes -->
     <div class="components-grid">
-      {components.map(component => (
+      {components.map((component) => (
         <div class="component-card" data-category={component.category} data-hydration={component.hydration}>
           <div class="component-thumbnail">
-            <img src={component.thumbnail} alt={component.name} loading="lazy">
+            <img src={component.thumbnail || "/admin/thumbnails/component-features.jpg"} alt={component.name} loading="lazy">
             <div class="component-actions">
               <a href={`/admin/themes/componentes/${component.id}`} class="component-action">Ver</a>
               <a href={`/admin/themes/componentes/${component.id}/editar`} class="component-action">Editar</a>
@@ -880,7 +880,7 @@ function translateHydration(type) {
         const iframe = document.getElementById('preview-iframe');
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
         iframeDoc.open();
-        iframeDoc.write(`
+        const htmlContent = `
           <!DOCTYPE html>
           <html>
           <head>
@@ -891,10 +891,10 @@ function translateHydration(type) {
           </head>
           <body>
             ${preview.html}
-            <script>/* JS aqui */</script>
           </body>
           </html>
-        `);
+        `;
+        iframeDoc.write(htmlContent);
         
         // Adicionar o JavaScript separadamente para evitar problemas com escape
         try {

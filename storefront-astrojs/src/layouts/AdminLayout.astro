@@ -1,10 +1,12 @@
 ---
 // src/layouts/AdminLayout.astro
 import UserAvatar from '../components/UserAvatar.astro';
+import { getUserSites } from '../utils/sitePermissions';
 
 interface Props {
   title: string;
   currentSection?: string;
+  currentSiteId?: string;
   userData?: {
     name: string;
     email: string;
@@ -14,7 +16,29 @@ interface Props {
 }
 
 // As páginas filhas devem passar os dados do usuário como propriedade
-const { title, currentSection = 'dashboard', userData = { name: 'Administrador', email: '', roles: [], avatarUrl: '' } } = Astro.props;
+const { 
+  title, 
+  currentSection = 'dashboard', 
+  currentSiteId = null,
+  userData = { name: 'Administrador', email: '', roles: [], avatarUrl: '' } 
+} = Astro.props;
+
+// Determinar se estamos em um contexto de site específico
+const isInSiteContext = !!currentSiteId;
+
+// Obter sites do usuário para navegação
+let userSites = [];
+try {
+  userSites = await getUserSites();
+} catch (error) {
+  console.error('Erro ao carregar sites do usuário:', error);
+}
+
+// Obter informações do site atual, se estiver em contexto de site
+let currentSite = null;
+if (isInSiteContext && userSites.length > 0) {
+  currentSite = userSites.find(site => site.id === currentSiteId);
+}
 
 // Importar estilos do tema selecionado
 const adminTheme = Astro.cookies.get('admin_theme')?.value || 'default';
@@ -98,6 +122,174 @@ const availableThemes = getAvailableThemes();
       --bg-light: var(--themeColorBackground);
     }
     
+    /* Estilos de navegação contextual */
+    .site-context-indicator {
+      display: flex;
+      align-items: center;
+      background-color: rgba(var(--primary-rgb, 79, 70, 229), 0.1);
+      border-radius: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      margin-right: 1rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .site-context-indicator .site-name {
+      max-width: 150px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-right: 0.5rem;
+    }
+    
+    .site-context-indicator .exit-context {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: rgba(var(--primary-rgb, 79, 70, 229), 0.1);
+      color: var(--primary);
+      transition: all 0.2s ease;
+    }
+    
+    .site-context-indicator .exit-context:hover {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    /* Estilos para a seção de site no sidebar */
+    .sidebar-section.site-header {
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+    }
+    
+    .sidebar-section.site-header .back-link {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+    
+    .sidebar-section.site-header .back-link svg {
+      margin-right: 0.5rem;
+    }
+    
+    .sidebar-section.site-header .site-details h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0.5rem 0;
+      color: var(--text-primary);
+    }
+    
+    .sidebar-section.site-header .site-url {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .sidebar-section.site-header .site-status {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 1rem;
+      background-color: #e5e7eb;
+      color: #374151;
+    }
+    
+    .sidebar-section.site-header .site-status[data-status="published"] {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .sidebar-section.site-header .site-status[data-status="draft"] {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+    
+    .sidebar-section.site-header .site-status[data-status="archived"],
+    .sidebar-section.site-header .site-status[data-status="maintenance"] {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    
+    /* Estilos para lista de sites no sidebar */
+    .site-list li a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      transition: all 0.2s ease;
+    }
+    
+    .site-list li a:hover {
+      background-color: rgba(var(--primary-rgb, 79, 70, 229), 0.05);
+    }
+    
+    .site-list .site-status {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #9ca3af;
+    }
+    
+    .site-list .site-status[data-status="published"] {
+      background-color: #10b981;
+    }
+    
+    .site-list .site-status[data-status="draft"] {
+      background-color: #f59e0b;
+    }
+    
+    .site-list .site-status[data-status="archived"],
+    .site-list .site-status[data-status="maintenance"] {
+      background-color: #ef4444;
+    }
+    
+    /* Estilos para ações rápidas */
+    .quick-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .quick-actions .action-button {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    
+    .quick-actions .action-button svg {
+      margin-right: 0.5rem;
+    }
+    
+    .quick-actions .action-button.view {
+      background-color: #e0e7ff;
+      color: #4338ca;
+    }
+    
+    .quick-actions .action-button.view:hover {
+      background-color: #c7d2fe;
+    }
+    
+    .quick-actions .action-button.create {
+      background-color: #dcfce7;
+      color: #15803d;
+    }
+    
+    .quick-actions .action-button.create:hover {
+      background-color: #bbf7d0;
+    }
+    
     /* Estilos para tratamento de imagens quebradas */
     .theme-thumbnail {
       position: relative;
@@ -153,32 +345,64 @@ const availableThemes = getAvailableThemes();
         <a href="/admin" class="admin-logo">
           <span class="logo-text">Konduza</span>
         </a>
-        <nav class="admin-main-nav">
-          <a href="/admin/sites" class={currentSection === 'sites' ? 'active' : ''}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-            Sites
-          </a>
-          <a href="/admin/themes" class={currentSection === 'themes' ? 'active' : ''}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"></circle><path d="M17.8 12.2l-5.4 5.4a1 1 0 0 1-1.4 0l-5.4-5.4a1 1 0 0 1 0-1.4L11 5.4a1 1 0 0 1 1.4 0l5.4 5.4a1 1 0 0 1 0 1.4z"></path></svg>
-            Temas
-          </a>
-          <a href="/admin/media" class={currentSection === 'media' ? 'active' : ''}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-            Mídia
-          </a>
-          <a href="/admin/content" class={currentSection === 'content' ? 'active' : ''}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Conteúdo
-          </a>
-          <a href="/admin/users" class={currentSection === 'users' ? 'active' : ''}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            Usuários
-          </a>
-          <a href="/admin/settings" class={currentSection === 'settings' ? 'active' : ''}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            Configurações
-          </a>
-        </nav>
+        
+        <!-- Navegação para contexto global -->
+        {!isInSiteContext && (
+          <nav class="admin-main-nav">
+            <a href="/admin/sites" class={currentSection === 'sites' ? 'active' : ''}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              Sites
+            </a>
+            <a href="/admin/themes" class={currentSection === 'themes' ? 'active' : ''}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"></circle><path d="M17.8 12.2l-5.4 5.4a1 1 0 0 1-1.4 0l-5.4-5.4a1 1 0 0 1 0-1.4L11 5.4a1 1 0 0 1 1.4 0l5.4 5.4a1 1 0 0 1 0 1.4z"></path></svg>
+              Temas
+            </a>
+            <a href="/admin/users" class={currentSection === 'users' ? 'active' : ''}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              Usuários
+            </a>
+            <a href="/admin/settings" class={currentSection === 'settings' ? 'active' : ''}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              Configurações
+            </a>
+          </nav>
+        )}
+        
+        <!-- Navegação para contexto de site específico -->
+        {isInSiteContext && currentSite && (
+          <nav class="admin-main-nav site-context">
+            <div class="site-context-indicator">
+              <span class="site-name">{currentSite.name}</span>
+              <a href="/admin/sites" class="exit-context" title="Voltar para todos os sites">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6L6 18"></path>
+                  <path d="M6 6l12 12"></path>
+                </svg>
+              </a>
+            </div>
+            
+            <a href={`/admin/sites/${currentSiteId}/paginas`} class={currentSection === 'pages' ? 'active' : ''}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Páginas
+            </a>
+            <a href={`/admin/sites/${currentSiteId}/conteudo`} class={currentSection === 'site-content' ? 'active' : ''}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Conteúdo
+            </a>
+            <a href={`/admin/sites/${currentSiteId}/media`} class={currentSection === 'site-media' ? 'active' : ''}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              Mídia
+            </a>
+            <a href={`/admin/sites/${currentSiteId}/usuarios`} class={currentSection === 'site-users' ? 'active' : ''}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              Usuários
+            </a>
+            <a href={`/admin/sites/${currentSiteId}/configuracoes`} class={currentSection === 'site-settings' ? 'active' : ''}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              Configurações
+            </a>
+          </nav>
+        )}
       </div>
       <div class="admin-header-right">
         <div class="admin-search">
@@ -222,90 +446,185 @@ const availableThemes = getAvailableThemes();
     </header>
     
     <aside class="admin-sidebar">
-      {currentSection === 'dashboard' && (
-        <div class="sidebar-section">
-          <h3>Painel</h3>
-          <ul>
-            <li><a href="/admin" class="active">Visão Geral</a></li>
-            <li><a href="/admin/atividade">Atividade Recente</a></li>
-            <li><a href="/admin/analytics">Estatísticas</a></li>
-            <li><a href="/admin/tarefas">Tarefas</a></li>
-          </ul>
-        </div>
+      {/* Menu global (não contextual) */}
+      {!isInSiteContext && (
+        <>
+          {currentSection === 'dashboard' && (
+            <div class="sidebar-section">
+              <h3>Painel</h3>
+              <ul>
+                <li><a href="/admin" class="active">Visão Geral</a></li>
+                <li><a href="/admin/atividade">Atividade Recente</a></li>
+                <li><a href="/admin/analytics">Estatísticas</a></li>
+                <li><a href="/admin/tarefas">Tarefas</a></li>
+              </ul>
+            </div>
+          )}
+          
+          {currentSection === 'sites' && (
+            <div class="sidebar-section">
+              <h3>Sites</h3>
+              <ul>
+                <li><a href="/admin/sites">Todos os Sites</a></li>
+                <li><a href="/admin/sites/criar">Criar Novo Site</a></li>
+                <li><a href="/admin/sites/dominios">Domínios</a></li>
+                <li><a href="/admin/sites/seo">SEO & Analytics</a></li>
+              </ul>
+            </div>
+          )}
+          
+          {currentSection === 'themes' && (
+            <div class="sidebar-section">
+              <h3>Temas</h3>
+              <ul>
+                <li><a href="/admin/themes">Biblioteca de Temas</a></li>
+                <li><a href="/admin/themes/editor">Editor de Tema</a></li>
+                <li><a href="/admin/themes/componentes">Componentes</a></li>
+                <li><a href="/admin/themes/importar">Importar Tema</a></li>
+              </ul>
+            </div>
+          )}
+          
+          {/* Remoção do menu global de mídia - agora disponível apenas no contexto de site */}
+          
+          {currentSection === 'users' && (
+            <div class="sidebar-section">
+              <h3>Usuários</h3>
+              <ul>
+                <li><a href="/admin/users">Todos os Usuários</a></li>
+                <li><a href="/admin/users/criar">Adicionar Usuário</a></li>
+                <li><a href="/admin/users/permissoes">Permissões</a></li>
+              </ul>
+            </div>
+          )}
+          
+          {currentSection === 'settings' && (
+            <div class="sidebar-section">
+              <h3>Configurações</h3>
+              <ul>
+                <li><a href="/admin/settings">Configurações Gerais</a></li>
+                <li><a href="/admin/settings/aparencia">Aparência</a></li>
+                <li><a href="/admin/settings/integracao">Integrações</a></li>
+                <li><a href="/admin/settings/seguranca">Segurança</a></li>
+                <li><a href="/admin/settings/backups">Backups & Exportação</a></li>
+              </ul>
+            </div>
+          )}
+          
+          {/* Lista de sites do usuário quando não está em contexto específico */}
+          {userSites.length > 0 && (
+            <div class="sidebar-section">
+              <h3>Seus Sites</h3>
+              <ul class="site-list">
+                {userSites.map(site => (
+                  <li>
+                    <a href={`/admin/sites/${site.id}`}>
+                      <span class="site-name">{site.name}</span>
+                      <span class="site-status" data-status={site.status}></span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
       
-      {currentSection === 'sites' && (
-        <div class="sidebar-section">
-          <h3>Sites</h3>
-          <ul>
-            <li><a href="/admin/sites">Todos os Sites</a></li>
-            <li><a href="/admin/sites/criar">Criar Novo Site</a></li>
-            <li><a href="/admin/sites/dominios">Domínios</a></li>
-            <li><a href="/admin/sites/seo">SEO & Analytics</a></li>
-          </ul>
-        </div>
-      )}
-      
-      {currentSection === 'themes' && (
-        <div class="sidebar-section">
-          <h3>Temas</h3>
-          <ul>
-            <li><a href="/admin/themes">Biblioteca de Temas</a></li>
-            <li><a href="/admin/themes/editor">Editor de Tema</a></li>
-            <li><a href="/admin/themes/componentes">Componentes</a></li>
-            <li><a href="/admin/themes/cores">Cores e Estilos</a></li>
-          </ul>
-        </div>
-      )}
-      
-      {currentSection === 'media' && (
-        <div class="sidebar-section">
-          <h3>Mídia</h3>
-          <ul>
-            <li><a href="/admin/media">Biblioteca de Mídia</a></li>
-            <li><a href="/admin/media/upload">Upload de Arquivos</a></li>
-            <li><a href="/admin/media/pastas">Pastas</a></li>
-            <li><a href="/admin/media/otimizacao">Otimização</a></li>
-          </ul>
-        </div>
-      )}
-      
-      {currentSection === 'content' && (
-        <div class="sidebar-section">
-          <h3>Conteúdo</h3>
-          <ul>
-            <li><a href="/admin/content">Todo Conteúdo</a></li>
-            <li><a href="/admin/content/paginas">Páginas</a></li>
-            <li><a href="/admin/content/posts">Posts</a></li>
-            <li><a href="/admin/content/produtos">Produtos</a></li>
-            <li><a href="/admin/content/formularios">Formulários</a></li>
-            <li><a href="/admin/content/tipos">Gerenciar Tipos</a></li>
-          </ul>
-        </div>
-      )}
-      
-      {currentSection === 'users' && (
-        <div class="sidebar-section">
-          <h3>Usuários</h3>
-          <ul>
-            <li><a href="/admin/users">Todos os Usuários</a></li>
-            <li><a href="/admin/users/criar">Adicionar Usuário</a></li>
-            <li><a href="/admin/users/permissoes">Permissões</a></li>
-          </ul>
-        </div>
-      )}
-      
-      {currentSection === 'settings' && (
-        <div class="sidebar-section">
-          <h3>Configurações</h3>
-          <ul>
-            <li><a href="/admin/settings">Configurações Gerais</a></li>
-            <li><a href="/admin/settings/aparencia">Aparência</a></li>
-            <li><a href="/admin/settings/integracao">Integrações</a></li>
-            <li><a href="/admin/settings/seguranca">Segurança</a></li>
-            <li><a href="/admin/settings/backups">Backups & Exportação</a></li>
-          </ul>
-        </div>
+      {/* Menu contextual de site específico */}
+      {isInSiteContext && currentSite && (
+        <>
+          <div class="sidebar-section site-header">
+            <h3>
+              <a href="/admin/sites" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Todos os Sites
+              </a>
+            </h3>
+            <div class="site-details">
+              <h2>{currentSite.name}</h2>
+              <div class="site-url">{currentSite.domains?.[0]?.domain}</div>
+              <div class="site-status" data-status={currentSite.status}>{currentSite.status === 'published' ? 'Publicado' : currentSite.status === 'draft' ? 'Rascunho' : 'Inativo'}</div>
+            </div>
+          </div>
+          
+          {currentSection === 'pages' && (
+            <div class="sidebar-section">
+              <h3>Páginas</h3>
+              <ul>
+                <li><a href={`/admin/sites/${currentSiteId}/paginas`}>Todas as Páginas</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/paginas/criar`}>Nova Página</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/paginas/navegacao`}>Navegação</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/paginas/templates`}>Templates</a></li>
+              </ul>
+            </div>
+          )}
+          
+          {currentSection === 'site-media' && (
+            <div class="sidebar-section">
+              <h3>Mídia do Site</h3>
+              <ul>
+                <li><a href={`/admin/sites/${currentSiteId}/media`}>Biblioteca de Mídia</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/media/upload`}>Novo Upload</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/media/pastas`}>Organizar Pastas</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/media/categorias`}>Categorias</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/media/galeria`}>Galerias</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/media/otimizacao`}>Otimização</a></li>
+              </ul>
+            </div>
+          )}
+          
+          {currentSection === 'site-users' && (
+            <div class="sidebar-section">
+              <h3>Usuários do Site</h3>
+              <ul>
+                <li><a href={`/admin/sites/${currentSiteId}/usuarios`}>Todos os Usuários</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/usuarios/adicionar`}>Adicionar Usuário</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/usuarios/tipos`}>Tipos de Usuário</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/usuarios/permissoes`}>Permissões</a></li>
+              </ul>
+            </div>
+          )}
+          
+          {currentSection === 'site-settings' && (
+            <div class="sidebar-section">
+              <h3>Configurações do Site</h3>
+              <ul>
+                <li><a href={`/admin/sites/${currentSiteId}/configuracoes`}>Geral</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/configuracoes/dominio`}>Domínio</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/configuracoes/seo`}>SEO & Analytics</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/configuracoes/tema`}>Tema</a></li>
+                <li><a href={`/admin/sites/${currentSiteId}/configuracoes/avancado`}>Avançado</a></li>
+              </ul>
+            </div>
+          )}
+          
+          <div class="sidebar-section">
+            <h3>Ações Rápidas</h3>
+            <ul class="quick-actions">
+              <li>
+                <a href={`/admin/sites/${currentSiteId}/view`} target="_blank" class="action-button view">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Visualizar Site
+                </a>
+              </li>
+              <li>
+                <a href={`/admin/sites/${currentSiteId}/paginas/criar`} class="action-button create">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Nova Página
+                </a>
+              </li>
+            </ul>
+          </div>
+        </>
       )}
       
       <div class="sidebar-toggle">
