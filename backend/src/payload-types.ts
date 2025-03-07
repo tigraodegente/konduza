@@ -71,6 +71,8 @@ export interface Config {
     sites: Site;
     themes: Theme;
     entities: Entity;
+    'site-user-roles': SiteUserRole;
+    'site-user-assignments': SiteUserAssignment;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -82,6 +84,8 @@ export interface Config {
     sites: SitesSelect<false> | SitesSelect<true>;
     themes: ThemesSelect<false> | ThemesSelect<true>;
     entities: EntitiesSelect<false> | EntitiesSelect<true>;
+    'site-user-roles': SiteUserRolesSelect<false> | SiteUserRolesSelect<true>;
+    'site-user-assignments': SiteUserAssignmentsSelect<false> | SiteUserAssignmentsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -157,6 +161,10 @@ export interface User {
      */
     language?: ('pt' | 'en' | 'es') | null;
   };
+  /**
+   * Associações deste usuário com sites específicos
+   */
+  siteRoles?: (number | SiteUserAssignment)[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -239,6 +247,34 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-user-assignments".
+ */
+export interface SiteUserAssignment {
+  id: number;
+  user: number | User;
+  site: number | Site;
+  role: number | SiteUserRole;
+  /**
+   * Dados personalizados deste usuário para o site
+   */
+  customData?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Indica se este acesso está ativo
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sites".
  */
 export interface Site {
@@ -273,6 +309,10 @@ export interface Site {
    * Usuário proprietário deste site
    */
   owner: number | User;
+  /**
+   * Papéis de usuário disponíveis neste site
+   */
+  siteRoles?: (number | SiteUserRole)[] | null;
   /**
    * Status atual do site
    */
@@ -599,6 +639,59 @@ export interface Theme {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-user-roles".
+ */
+export interface SiteUserRole {
+  id: number;
+  /**
+   * Nome do papel de usuário (ex: Cliente, Membro, Professor)
+   */
+  name: string;
+  /**
+   * Identificador único (ex: cliente, membro, professor)
+   */
+  slug: string;
+  /**
+   * Site ao qual este papel pertence
+   */
+  site: number | Site;
+  /**
+   * Descrição detalhada deste papel de usuário
+   */
+  description?: string | null;
+  /**
+   * Permissões específicas para este papel
+   */
+  permissions?:
+    | {
+        resource: 'pages' | 'posts' | 'products' | 'media' | 'settings' | 'users' | 'forms';
+        actions: ('read' | 'create' | 'update' | 'delete')[];
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Campos personalizados para usuários com este papel
+   */
+  customFields?:
+    | {
+        fieldName: string;
+        fieldType: 'text' | 'number' | 'email' | 'date' | 'select' | 'checkbox';
+        required?: boolean | null;
+        options?:
+          | {
+              label: string;
+              value: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "entities".
  */
 export interface Entity {
@@ -707,6 +800,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'entities';
         value: number | Entity;
+      } | null)
+    | ({
+        relationTo: 'site-user-roles';
+        value: number | SiteUserRole;
+      } | null)
+    | ({
+        relationTo: 'site-user-assignments';
+        value: number | SiteUserAssignment;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -766,6 +867,7 @@ export interface UsersSelect<T extends boolean = true> {
         emailNotifications?: T;
         language?: T;
       };
+  siteRoles?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -853,6 +955,7 @@ export interface SitesSelect<T extends boolean = true> {
       };
   theme?: T;
   owner?: T;
+  siteRoles?: T;
   status?: T;
   settings?:
     | T
@@ -1004,6 +1107,53 @@ export interface EntitiesSelect<T extends boolean = true> {
         keywords?: T;
         ogImage?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-user-roles_select".
+ */
+export interface SiteUserRolesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  site?: T;
+  description?: T;
+  permissions?:
+    | T
+    | {
+        resource?: T;
+        actions?: T;
+        id?: T;
+      };
+  customFields?:
+    | T
+    | {
+        fieldName?: T;
+        fieldType?: T;
+        required?: T;
+        options?:
+          | T
+          | {
+              label?: T;
+              value?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-user-assignments_select".
+ */
+export interface SiteUserAssignmentsSelect<T extends boolean = true> {
+  user?: T;
+  site?: T;
+  role?: T;
+  customData?: T;
+  isActive?: T;
   updatedAt?: T;
   createdAt?: T;
 }
