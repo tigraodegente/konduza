@@ -213,10 +213,34 @@ button, input, select, textarea {
   justify-content: center;
 }
 
-.profile-toggle img {
-  width: 2rem;
-  height: 2rem;
+.user-avatar {
+  width: 2.2rem;
+  height: 2.2rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar img {
+  width: 2.2rem;
+  height: 2.2rem;
   border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-fallback {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
 }
 
 /* Sidebar */

@@ -1,5 +1,6 @@
 ---
 // src/layouts/AdminLayout.astro
+import UserAvatar from '../components/UserAvatar.astro';
 
 interface Props {
   title: string;
@@ -8,11 +9,12 @@ interface Props {
     name: string;
     email: string;
     roles: string[];
+    avatarUrl?: string;
   };
 }
 
 // As páginas filhas devem passar os dados do usuário como propriedade
-const { title, currentSection = 'dashboard', userData = { name: 'Administrador', email: '', roles: [] } } = Astro.props;
+const { title, currentSection = 'dashboard', userData = { name: 'Administrador', email: '', roles: [], avatarUrl: '' } } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -22,6 +24,45 @@ const { title, currentSection = 'dashboard', userData = { name: 'Administrador',
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title} | Konduza Admin</title>
   <link rel="stylesheet" href="/admin/css/admin.css">
+  <style>
+    /* Estilos para tratamento de imagens quebradas */
+    .theme-thumbnail {
+      position: relative;
+      overflow: hidden;
+      background-color: #f0f2f5;
+      border-radius: 0.375rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .theme-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: all 0.3s ease;
+    }
+    
+    .theme-thumbnail-fallback {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f0f2f5;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    
+    .theme-thumbnail-fallback svg {
+      width: 40%;
+      height: 40%;
+      opacity: 0.5;
+    }
+  </style>
 </head>
 <body>
   <div class="admin-layout">
@@ -70,7 +111,7 @@ const { title, currentSection = 'dashboard', userData = { name: 'Administrador',
         </div>
         <div class="admin-profile">
           <button class="profile-toggle">
-            <img src="/admin/avatar.jpg" alt={userData.name} />
+            <UserAvatar name={userData.name} avatarUrl={userData.avatarUrl} size="md" />
             <span class="hidden md:inline ml-2">{userData.name}</span>
           </button>
           <div class="profile-dropdown hidden">
@@ -199,6 +240,41 @@ const { title, currentSection = 'dashboard', userData = { name: 'Administrador',
   </div>
 
   <script>
+    // Utilitário para lidar com imagens quebradas
+    function handleImageFallbacks() {
+      // Tratamento para thumbnails de temas
+      const themeThumbnails = document.querySelectorAll('.theme-thumbnail img');
+      themeThumbnails.forEach(img => {
+        if (!img.complete || img.naturalHeight === 0) {
+          showThemeFallback(img);
+        }
+        img.addEventListener('error', () => showThemeFallback(img));
+      });
+      
+      function showThemeFallback(img) {
+        const parent = img.parentElement;
+        img.style.display = 'none';
+        
+        // Verificar se já existe um fallback
+        let fallback = parent.querySelector('.theme-thumbnail-fallback');
+        if (!fallback) {
+          fallback = document.createElement('div');
+          fallback.className = 'theme-thumbnail-fallback';
+          fallback.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          `;
+          parent.appendChild(fallback);
+        }
+      }
+    }
+
+    // Executar quando o DOM estiver carregado
+    document.addEventListener('DOMContentLoaded', handleImageFallbacks);
+    
     // Scripts para funcionalidades interativas do admin
     document.addEventListener('DOMContentLoaded', () => {
       const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
