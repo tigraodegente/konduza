@@ -1,0 +1,165 @@
+/**
+ * Tema baseado no tema padrão do site para o painel administrativo Konduza
+ * Este arquivo adapta as cores e estilos do site para uso no painel administrativo
+ */
+
+:root {
+  /* Cores do tema do site */
+  --primary: #7752FE;
+  --primary-hover: #5232CB;
+  --secondary: #2EC4B6;
+  --secondary-hover: #1B9085;
+  --success: #28A745;
+  --danger: #DC3545;
+  --warning: #FFC107;
+  --info: #17A2B8;
+  
+  /* Tons neutros adaptados */
+  --bg-light: #FFFFFF;
+  --bg-dark: #212529;
+  --text-light: #FFFFFF;
+  --text-dark: #212529;
+  --border-light: #E9ECEF;
+  --border-dark: #DEE2E6;
+  
+  /* Variáveis adicionais específicas */
+  --header-bg: #7752FE;
+  --sidebar-bg: #F8F9FA;
+  --content-bg: #FFFFFF;
+  --input-bg: #FFFFFF;
+  --panel-bg: #FFFFFF;
+  --hover-bg: rgba(119, 82, 254, 0.1);
+  --accent: #FF9F1C;
+}
+
+/* Estilos base */
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Cabeçalho */
+.admin-header {
+  background-color: var(--header-bg);
+  border-color: var(--primary-hover);
+}
+
+.admin-main-nav a {
+  color: var(--text-light);
+}
+
+.admin-main-nav a:hover, .admin-main-nav a.active {
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Logo */
+.admin-logo .logo-text {
+  color: var(--text-light);
+}
+
+/* Botões de navegação */
+.admin-header-right .icon-search,
+.admin-header-right .icon-bell {
+  color: var(--text-light);
+}
+
+.notification-badge {
+  background-color: var(--accent);
+}
+
+/* Barra lateral */
+.admin-sidebar {
+  background-color: var(--sidebar-bg);
+  border-color: var(--border-light);
+}
+
+.sidebar-section h3 {
+  color: var(--primary);
+  border-color: var(--border-light);
+}
+
+.sidebar-section a {
+  color: var(--text-dark);
+}
+
+.sidebar-section a:hover, .sidebar-section a.active {
+  color: var(--primary);
+  background-color: var(--hover-bg);
+}
+
+/* Botão de toggle da sidebar */
+.sidebar-toggle button {
+  background-color: var(--primary);
+  border: none;
+  color: var(--text-light);
+}
+
+.sidebar-toggle button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Botões */
+.btn-primary, button[type="submit"] {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover, button[type="submit"]:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-hover);
+}
+
+/* Links */
+a {
+  color: var(--primary);
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Badges e indicadores */
+.bg-blue-600, .bg-blue-500 {
+  background-color: var(--primary) !important;
+}
+
+.text-blue-600, .text-blue-500 {
+  color: var(--primary) !important;
+}
+
+.border-blue-500 {
+  border-color: var(--primary) !important;
+}
+
+.ring-blue-200 {
+  --tw-ring-color: rgba(119, 82, 254, 0.3) !important;
+}
+
+/* Footer */
+.admin-footer {
+  background-color: var(--sidebar-bg);
+  border-color: var(--border-light);
+}
+
+/* Formulários */
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary) !important;
+  --tw-ring-color: rgba(119, 82, 254, 0.3) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-hover);
+}

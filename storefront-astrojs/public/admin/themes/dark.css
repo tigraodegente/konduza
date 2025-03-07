@@ -1,0 +1,215 @@
+/**
+ * Tema escuro para o painel administrativo Konduza
+ */
+
+:root {
+  /* Cores principais */
+  --primary: #6366f1;      /* Indigo mais brilhante para destaque */
+  --primary-hover: #4f46e5;
+  --secondary: #64748b;
+  --secondary-hover: #475569;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  
+  /* Tons neutros (modo escuro) */
+  --bg-light: #1e1e2e;     /* Fundo escuro */
+  --bg-dark: #11111b;      /* Fundo mais escuro */
+  --text-light: #e2e8f0;   /* Texto claro para fundo escuro */
+  --text-dark: #94a3b8;    /* Texto menos brilhante */
+  --border-light: #2d2d3f; /* Bordas mais sutis */
+  --border-dark: #1c1c2a;  /* Bordas escuras */
+  
+  /* Variáveis adicionais específicas para tema escuro */
+  --header-bg: #11111b;
+  --sidebar-bg: #1e1e2e;
+  --content-bg: #262636;
+  --input-bg: #0f0f17;
+  --panel-bg: #262636;
+  --hover-bg: rgba(99, 102, 241, 0.1);
+  --card-bg: #262636;
+}
+
+/* Estilos base */
+body {
+  background-color: var(--bg-light);
+  color: var(--text-light);
+}
+
+/* Cabeçalho */
+.admin-header {
+  background-color: var(--header-bg);
+  border-color: var(--border-light);
+}
+
+.admin-main-nav a {
+  color: var(--text-dark);
+}
+
+.admin-main-nav a:hover, .admin-main-nav a.active {
+  color: var(--primary);
+  background-color: var(--hover-bg);
+}
+
+/* Busca */
+.admin-search input {
+  background-color: var(--input-bg);
+  color: var(--text-light);
+  border-color: var(--border-dark);
+}
+
+/* Barra lateral */
+.admin-sidebar {
+  background-color: var(--sidebar-bg);
+  border-color: var(--border-light);
+}
+
+.sidebar-section h3 {
+  color: var(--text-dark);
+  border-color: var(--border-light);
+}
+
+.sidebar-section a {
+  color: var(--text-light);
+}
+
+.sidebar-section a:hover, .sidebar-section a.active {
+  color: var(--primary);
+  background-color: var(--hover-bg);
+}
+
+/* Botão de toggle da sidebar */
+.sidebar-toggle button {
+  background-color: var(--bg-dark);
+  border-color: var(--border-light);
+  color: var(--text-light);
+}
+
+/* Conteúdo */
+.admin-content {
+  background-color: var(--content-bg);
+}
+
+/* Painéis, cartões e containers */
+.content-container, .bg-white, .card, .panel {
+  background-color: var(--panel-bg) !important;
+  color: var(--text-light) !important;
+  border-color: var(--border-light) !important;
+}
+
+/* Textos */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-light);
+}
+
+.text-gray-700, .text-gray-800, .text-gray-900 {
+  color: var(--text-light) !important;
+}
+
+.text-gray-600, .text-gray-500, .text-gray-400 {
+  color: var(--text-dark) !important;
+}
+
+/* Botões */
+.btn-primary, button[type="submit"] {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover, button[type="submit"]:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: white;
+}
+
+/* Inputs e forms */
+input, select, textarea, .form-input, .form-select, .form-textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--text-light) !important;
+  border-color: var(--border-light) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Tabelas */
+table {
+  color: var(--text-light);
+}
+
+thead th {
+  border-color: var(--border-light);
+}
+
+tbody td {
+  border-color: var(--border-light);
+}
+
+tr:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+/* Bordas */
+.border, .border-t, .border-b, .border-l, .border-r {
+  border-color: var(--border-light) !important;
+}
+
+.border-gray-200, .border-gray-300 {
+  border-color: var(--border-light) !important;
+}
+
+/* Sombras */
+.shadow, .shadow-sm, .shadow-md, .shadow-lg {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Footer */
+.admin-footer {
+  background-color: var(--header-bg);
+  border-color: var(--border-light);
+  color: var(--text-dark);
+}
+
+/* Dropdown */
+.dropdown-menu, .profile-dropdown {
+  background-color: var(--panel-bg) !important;
+  border-color: var(--border-light) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dropdown-header {
+  border-color: var(--border-light) !important;
+}
+
+.dropdown-menu a {
+  color: var(--text-light) !important;
+}
+
+.dropdown-menu a:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+/* Scrollbars personalizados */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-hover);
+}

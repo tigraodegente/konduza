@@ -1,0 +1,211 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getAdminSession } from '../../../utils/api.js';
+import ThemeThumbnail from '../../../components/ThemeThumbnail.astro';
+
+// Verificar autenticação do admin
+const session = await getAdminSession(Astro.request);
+if (!session) {
+  return Astro.redirect('/login?redirect=/admin/settings/aparencia');
+}
+
+// Obter o tema atual armazenado nos cookies
+const currentTheme = Astro.cookies.get('admin_theme')?.value || 'default';
+
+// Se for uma submissão de formulário, atualizar o tema
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const newTheme = formData.get('theme');
+    
+    if (newTheme) {
+      // Definir cookie que expira em 1 ano
+      Astro.cookies.set('admin_theme', newTheme, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+        httpOnly: true
+      });
+      
+      // Redirecionar para recarregar a página com o novo tema
+      return Astro.redirect('/admin/settings/aparencia?changed=true');
+    }
+  } catch (error) {
+    console.error('Erro ao salvar tema:', error);
+  }
+}
+
+// Função para obter temas disponíveis
+const getAvailableThemes = () => {
+  return [
+    {
+      id: 'default',
+      name: 'Tema Padrão',
+      description: 'Tema padrão do painel administrativo',
+      colors: {
+        primary: '#4f46e5',
+        secondary: '#64748b',
+        background: '#f9fafb'
+      },
+      type: 'internal',
+      preview: '/admin/themes/preview-default.png'
+    },
+    {
+      id: 'dark',
+      name: 'Tema Escuro',
+      description: 'Tema escuro para o painel administrativo',
+      colors: {
+        primary: '#6366f1',
+        secondary: '#64748b',
+        background: '#1e1e2e'
+      },
+      type: 'internal',
+      preview: '/admin/themes/preview-dark.png'
+    },
+    {
+      id: 'default-theme',
+      name: 'Tema Padrão Konduza',
+      description: 'Cores do tema padrão do site aplicadas ao painel',
+      colors: {
+        primary: '#7752FE',
+        secondary: '#2EC4B6',
+        background: '#FFFFFF'
+      },
+      type: 'site',
+      preview: '/admin/themes/preview-site-default.png'
+    }
+  ];
+};
+
+const themes = getAvailableThemes();
+const successMessage = Astro.url.searchParams.get('changed') === 'true';
+---
+
+<AdminLayout title="Aparência do Painel" currentSection="settings" userData={session}>
+  <div class="content-container">
+    <div class="page-header">
+      <div class="page-title">
+        <h1 class="text-2xl font-bold">Aparência do Painel</h1>
+        <p class="text-sm text-gray-600">Personalize a aparência do seu painel administrativo</p>
+      </div>
+    </div>
+    
+    {successMessage && (
+      <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <span>Tema atualizado com sucesso!</span>
+      </div>
+    )}
+    
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-lg font-semibold mb-4">Escolha o tema do painel</h2>
+      <p class="text-gray-600 mb-6">Selecione um dos temas disponíveis para personalizar a aparência do painel administrativo Konduza.</p>
+      
+      <form method="POST" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {themes.map(theme => (
+            <div class={`theme-option border rounded-lg p-4 ${currentTheme === theme.id ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`}>
+              <input
+                type="radio"
+                name="theme"
+                id={`theme-${theme.id}`}
+                value={theme.id}
+                checked={currentTheme === theme.id}
+                class="sr-only"
+              />
+              <label for={`theme-${theme.id}`} class="block cursor-pointer">
+                <div class="aspect-video mb-4 rounded overflow-hidden border">
+                  <ThemeThumbnail 
+                    src={theme.preview} 
+                    title={theme.name}
+                    aspectRatio="16/9"
+                  />
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="font-medium">{theme.name}</h3>
+                  {theme.type === 'internal' ? (
+                    <span class="text-xs bg-gray-100 px-2 py-1 rounded">Interno</span>
+                  ) : (
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Tema do Site</span>
+                  )}
+                </div>
+                <p class="text-sm text-gray-600 mb-3">{theme.description}</p>
+                <div class="flex space-x-2">
+                  {Object.entries(theme.colors).map(([key, color]) => (
+                    <div class="flex flex-col items-center">
+                      <div class="w-5 h-5 rounded-full" style={`background-color: ${color}`}></div>
+                      <span class="text-xs text-gray-500 mt-1">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                    </div>
+                  ))}
+                </div>
+              </label>
+            </div>
+          ))}
+        </div>
+        
+        <div class="flex items-center justify-end space-x-4">
+          <a href="/admin/settings" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+            Cancelar
+          </a>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            Salvar tema
+          </button>
+        </div>
+      </form>
+    </div>
+    
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold mb-4">Temas personalizados</h2>
+      <p class="text-gray-600 mb-4">Você também pode criar temas personalizados para o painel administrativo a partir dos temas dos sites.</p>
+      
+      <div class="border-t pt-4 mt-4">
+        <h3 class="font-medium mb-2">Dica:</h3>
+        <p class="text-sm text-gray-600">
+          Para usar um tema de site como base para o painel, primeiro crie e publique o tema no site, 
+          depois volte aqui para selecioná-lo. As cores e estilos serão automaticamente adaptados para o painel admin.
+        </p>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  // Script para fazer a seleção do tema mais interativa
+  document.addEventListener('DOMContentLoaded', () => {
+    const themeOptions = document.querySelectorAll('.theme-option');
+    const themeRadios = document.querySelectorAll('input[name="theme"]');
+    
+    themeOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        // Encontrar o input dentro desta opção
+        const radio = option.querySelector('input[type="radio"]');
+        if (radio) {
+          radio.checked = true;
+          
+          // Atualizar aparência de todos os cartões
+          themeOptions.forEach(opt => {
+            opt.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
+            opt.classList.add('border-gray-200');
+          });
+          
+          // Destacar o cartão selecionado
+          option.classList.remove('border-gray-200');
+          option.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .theme-option {
+    transition: all 0.2s ease;
+  }
+  
+  .theme-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+</style>
