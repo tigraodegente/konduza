@@ -1,0 +1,540 @@
+---
+import AdminLayout from '../../../../../layouts/AdminLayout.astro';
+import { getUserSiteRole } from '../../../../../utils/sitePermissions.js';
+import ConditionalAccess from '../../../../../components/react/ConditionalAccess.jsx';
+
+// Obter ID do site da URL
+const { id: siteId } = Astro.params;
+
+// Obter dados do usuário (em produção, isso viria da sessão)
+const userData = {
+  name: 'Administrador',
+  email: 'admin@example.com',
+  roles: ['admin'],
+  avatarUrl: '/admin/avatar.jpg'
+};
+
+// Verificar permissões
+const userRole = await getUserSiteRole(siteId);
+const hasPermission = userRole?.permissions?.some(p => 
+  p.resource === 'media' && p.actions.includes('read')
+) || userData.roles.includes('admin');
+
+// Se não tiver permissão, redirecionar
+if (!hasPermission) {
+  return Astro.redirect('/admin/sites');
+}
+
+// Obter dados do site
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+let site = null;
+let mediaItems = [];
+
+try {
+  // Buscar site
+  const siteResponse = await fetch(`${API_URL}/api/sites/${siteId}`, {
+    credentials: 'include'
+  });
+  
+  if (siteResponse.ok) {
+    site = await siteResponse.json();
+    
+    // Buscar mídia do site
+    const mediaResponse = await fetch(`${API_URL}/api/media?where[site][equals]=${siteId}`, {
+      credentials: 'include'
+    });
+    
+    if (mediaResponse.ok) {
+      const mediaData = await mediaResponse.json();
+      mediaItems = mediaData.docs || [];
+    }
+  }
+} catch (error) {
+  console.error('Erro ao carregar dados:', error);
+}
+
+// Definir título da página
+const pageTitle = `Mídia - ${site?.name || 'Site'}`;
+---
+
+<AdminLayout 
+  title={pageTitle} 
+  currentSection="site-media" 
+  currentSiteId={siteId} 
+  userData={userData}
+>
+  <div class="page-container">
+    <div class="page-header">
+      <div class="page-title">
+        <h1>Biblioteca de Mídia</h1>
+        <div class="breadcrumbs">
+          <a href="/admin">Admin</a> / 
+          <a href="/admin/sites">Sites</a> / 
+          <a href={`/admin/sites/${siteId}`}>{site?.name || 'Site'}</a> / 
+          <span>Mídia</span>
+        </div>
+      </div>
+      
+      <div class="page-actions">
+        <ConditionalAccess siteId={siteId} resource="media" action="create" client:load>
+          <a href={`/admin/sites/${siteId}/media/upload`} class="btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Novo Upload
+          </a>
+        </ConditionalAccess>
+      </div>
+    </div>
+    
+    <!-- Filtros e pesquisa -->
+    <div class="filters-bar">
+      <div class="search-box">
+        <input type="text" placeholder="Buscar mídia..." id="search-media" />
+        <button>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="filter-controls">
+        <select id="filter-type">
+          <option value="">Todos os tipos</option>
+          <option value="image">Imagens</option>
+          <option value="document">Documentos</option>
+          <option value="video">Vídeos</option>
+          <option value="audio">Áudio</option>
+        </select>
+        
+        <select id="filter-folder">
+          <option value="">Todas as pastas</option>
+          <option value="uploads">Uploads</option>
+          <option value="products">Produtos</option>
+          <option value="banners">Banners</option>
+        </select>
+        
+        <button class="btn-secondary view-toggle" data-view="grid">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+        </button>
+        
+        <button class="btn-secondary view-toggle" data-view="list">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Conteúdo principal -->
+    <div class="content-card">
+      {mediaItems.length > 0 ? (
+        <div class="media-grid">
+          {mediaItems.map(item => (
+            <div class="media-item" data-id={item.id} data-type={item.category || 'image'}>
+              <div class="media-preview">
+                {item.url && (
+                  <img src={item.url} alt={item.alt || 'Mídia'} loading="lazy" />
+                )}
+              </div>
+              <div class="media-info">
+                <h4 class="media-title">{item.filename || 'Arquivo sem nome'}</h4>
+                <div class="media-meta">
+                  <span class="media-type">{item.mimeType || 'Desconhecido'}</span>
+                  <span class="media-size">{formatFileSize(item.filesize)}</span>
+                </div>
+              </div>
+              <div class="media-actions">
+                <button class="action-btn view-btn" title="Visualizar" data-id={item.id}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+                <button class="action-btn edit-btn" title="Editar" data-id={item.id}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                <button class="action-btn delete-btn" title="Excluir" data-id={item.id}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="empty-state">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </div>
+          <h3>Nenhuma mídia encontrada</h3>
+          <p>Este site ainda não possui nenhuma mídia. Faça upload de imagens, vídeos ou outros arquivos.</p>
+          <div class="empty-actions">
+            <a href={`/admin/sites/${siteId}/media/upload`} class="btn-primary">
+              Upload de Mídia
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  .filters-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .search-box {
+    position: relative;
+    flex-grow: 1;
+    max-width: 400px;
+  }
+  
+  .search-box input {
+    width: 100%;
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+  }
+  
+  .search-box button {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  
+  .filter-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .filter-controls select {
+    padding: 0.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    background-color: var(--bg-light);
+  }
+  
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  
+  .media-item {
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  
+  .media-item:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    border-color: var(--border-hover);
+  }
+  
+  .media-preview {
+    height: 160px;
+    background-color: var(--bg-alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  .media-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .media-info {
+    padding: 0.75rem;
+  }
+  
+  .media-title {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .media-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  
+  .media-actions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  
+  .media-item:hover .media-actions {
+    opacity: 1;
+  }
+  
+  .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: none;
+    background: white;
+    border-radius: 0.25rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--primary);
+  }
+  
+  .action-btn.delete-btn:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+  
+  .empty-state .icon {
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+  }
+  
+  .empty-state h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .empty-state p {
+    color: var(--text-secondary);
+    max-width: 32rem;
+    margin: 0 auto 2rem;
+  }
+  
+  .view-toggle.active {
+    background-color: var(--primary);
+    color: white;
+  }
+</style>
+
+<script>
+  // Formatador de tamanho de arquivo
+  function formatFileSize(bytes) {
+    if (!bytes) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    // Configurar alternância de visualização (grid/lista)
+    const viewToggles = document.querySelectorAll('.view-toggle');
+    const mediaContainer = document.querySelector('.media-grid');
+    
+    viewToggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const view = toggle.dataset.view;
+        
+        // Remover classe active de todos os botões
+        viewToggles.forEach(btn => btn.classList.remove('active'));
+        
+        // Adicionar classe active ao botão clicado
+        toggle.classList.add('active');
+        
+        // Atualizar classe na grid
+        if (mediaContainer) {
+          mediaContainer.className = view === 'grid' ? 'media-grid' : 'media-list';
+        }
+      });
+    });
+    
+    // Ativar grid view por padrão
+    const gridToggle = document.querySelector('.view-toggle[data-view="grid"]');
+    if (gridToggle) {
+      gridToggle.classList.add('active');
+    }
+    
+    // Função de filtro para a lista de mídia
+    const searchInput = document.getElementById('search-media');
+    const typeFilter = document.getElementById('filter-type');
+    const folderFilter = document.getElementById('filter-folder');
+    const mediaItems = document.querySelectorAll('.media-item');
+    
+    function applyFilters() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const typeValue = typeFilter.value;
+      
+      mediaItems.forEach(item => {
+        const title = item.querySelector('.media-title').textContent.toLowerCase();
+        const type = item.dataset.type;
+        
+        const matchesSearch = !searchTerm || title.includes(searchTerm);
+        const matchesType = !typeValue || type === typeValue;
+        
+        if (matchesSearch && matchesType) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      
+      // Verificar se há itens visíveis após a filtragem
+      let visibleItems = 0;
+      mediaItems.forEach(item => {
+        if (item.style.display !== 'none') {
+          visibleItems++;
+        }
+      });
+      
+      // Mostrar estado vazio se não houver itens visíveis
+      const grid = document.querySelector('.media-grid');
+      const emptyState = document.querySelector('.empty-state');
+      
+      if (grid && emptyState) {
+        if (visibleItems === 0) {
+          grid.style.display = 'none';
+          
+          // Se ainda não houver estado vazio, criar um
+          if (!document.querySelector('.empty-state.filtering')) {
+            const filterEmptyState = emptyState.cloneNode(true);
+            filterEmptyState.classList.add('filtering');
+            
+            const heading = filterEmptyState.querySelector('h3');
+            const paragraph = filterEmptyState.querySelector('p');
+            
+            if (heading) heading.textContent = 'Nenhum resultado encontrado';
+            if (paragraph) paragraph.textContent = 'Tente ajustar os filtros para encontrar o que está procurando.';
+            
+            const actions = filterEmptyState.querySelector('.empty-actions');
+            if (actions) {
+              actions.innerHTML = `
+                <button class="btn-secondary" id="clear-filters">
+                  Limpar Filtros
+                </button>
+              `;
+            }
+            
+            grid.parentNode.appendChild(filterEmptyState);
+            
+            // Adicionar evento para limpar filtros
+            const clearBtn = document.getElementById('clear-filters');
+            if (clearBtn) {
+              clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                typeFilter.value = '';
+                folderFilter.value = '';
+                applyFilters();
+              });
+            }
+          } else {
+            document.querySelector('.empty-state.filtering').style.display = 'block';
+          }
+        } else {
+          grid.style.display = 'grid';
+          const filterEmptyState = document.querySelector('.empty-state.filtering');
+          if (filterEmptyState) {
+            filterEmptyState.style.display = 'none';
+          }
+        }
+      }
+    }
+    
+    // Adicionar eventos de filtro
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (typeFilter) typeFilter.addEventListener('change', applyFilters);
+    if (folderFilter) folderFilter.addEventListener('change', applyFilters);
+    
+    // Eventos para botões de ação
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        
+        if (btn.classList.contains('view-btn')) {
+          // Visualizar mídia
+          window.open(`/admin/sites/${new URLSearchParams(window.location.search).get('siteId') || window.location.pathname.split('/')[3]}/media/${id}`, '_blank');
+        } else if (btn.classList.contains('edit-btn')) {
+          // Editar mídia
+          window.location.href = `/admin/sites/${new URLSearchParams(window.location.search).get('siteId') || window.location.pathname.split('/')[3]}/media/${id}/editar`;
+        } else if (btn.classList.contains('delete-btn')) {
+          // Excluir mídia
+          if (confirm('Tem certeza que deseja excluir este arquivo?')) {
+            // Implementar lógica de exclusão
+            console.log(`Excluir mídia ${id}`);
+          }
+        }
+      });
+    });
+    
+    // Fazer com que o item todo seja clicável para visualizar
+    document.querySelectorAll('.media-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const id = item.dataset.id;
+        window.location.href = `/admin/sites/${new URLSearchParams(window.location.search).get('siteId') || window.location.pathname.split('/')[3]}/media/${id}`;
+      });
+    });
+  });
+</script>
